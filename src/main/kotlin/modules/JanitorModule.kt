@@ -5,6 +5,7 @@ import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
 import sx.blah.discord.handle.obj.IMessage
+import sx.blah.discord.util.RequestBuffer
 import java.lang.Thread.sleep
 
 
@@ -13,6 +14,7 @@ const val POKECORD_ID = 365975655608745985L
 
 /* Time in miliseconds to wait before deleting Pokécord dialogue */
 const val DELETE_TIMER = 5000L
+
 
 
 class JanitorModule : Module() {
@@ -36,7 +38,7 @@ class JanitorModule : Module() {
                 println("Starting timer to delete messages")
                 launch {
                     delay(DELETE_TIMER)
-                    dirtyByChannel[channelID]?.forEach { it.delete() }
+                    dirtyByChannel[channelID]?.forEach { RequestBuffer.request { it.delete()} }
                     dirtyByChannel.remove(channelID)
                     println("Deleted offending messages")
                 }
