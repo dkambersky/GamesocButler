@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        kotlinVersion = '1.2.31'
+        kotlinVersion = '1.2.50'
         jacksonVersion = "2.9.3"
         discord4jVersion = "2.9.3"
         khttpVersion = "0.1.0"
@@ -19,7 +19,7 @@ buildscript {
     }
 }
 
-rootProject.name = 'cleanerbot'
+// name 'cleanerbot'
 group 'dkambersky'
 version '1.0-SNAPSHOT'
 
