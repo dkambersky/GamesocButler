@@ -4,3 +4,5 @@ gradlew
 gradlew.bat
 .idea/
 build/
+out/
+config.yml
