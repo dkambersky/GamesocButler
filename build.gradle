@@ -1,0 +1,69 @@
+buildscript {
+    ext {
+        kotlinVersion = '1.2.31'
+        jacksonVersion = "2.9.3"
+        discord4jVersion = "2.9.3"
+        khttpVersion = "0.1.0"
+    }
+
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven { url "http://jcenter.bintray.com" }
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}"
+        classpath "org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}"
+        classpath "com.fasterxml.jackson.module:jackson-module-kotlin:${jacksonVersion}"
+        classpath "khttp:khttp:${khttpVersion}"
+    }
+}
+
+rootProject.name = 'cleanerbot'
+group 'dkambersky'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'kotlin'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+
+
+repositories {
+    jcenter()
+    mavenCentral()
+    maven { url "https://jitpack.io" }
+}
+
+dependencies {
+    /* Kotlin */
+    compile("org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}")
+    compile("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
+
+    /* Jackson */
+    compile("com.fasterxml.jackson.module:jackson-module-kotlin:${jacksonVersion}")
+    compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.9.4'
+
+    /* kHTTP */
+    compile "khttp:khttp:0.1.0"
+
+    /* Discord4J */
+    compile "com.github.austinv11:Discord4J:${discord4jVersion}"
+
+    /* Challonge */
+    compile group: 'com.exsoloscript.challonge', name: 'challonge-java', version: '1.0.3'
+
+
+}
