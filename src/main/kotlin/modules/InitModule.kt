@@ -13,7 +13,7 @@ class InitModule : Module() {
 
     override fun handleReady() {
         super.handleReady()
-        client.changePlayingText("with JVM")
+        client.changePlayingText("whack-a-mole w/ Pokécord")
 
         try {
             val channelID = get("master-channel-id") as Long
