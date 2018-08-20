@@ -1,4 +1,4 @@
-package io
+package com.github.dkambersky.cleanerbot
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -9,18 +9,12 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.NoSuchFileException
 
-/** Default IDEA comment
- * Created by David on 06/02/2017.
- */
-
-
-var db_initialized = false
-var db_tree: JsonNode? = null
+lateinit var db_tree: JsonNode
 
 /* Convenience method */
-fun getConfBranch(vararg keys: String): JsonNode {
+fun getConfBranch(vararg keys: String): JsonNode? {
     load()
-    var node: JsonNode = db_tree!!
+    var node = db_tree
 
     for (key in keys) {
 
@@ -28,7 +22,6 @@ fun getConfBranch(vararg keys: String): JsonNode {
 
         if (value != null && value.isValueNode)
             return value
-
         else node = node.with(key)
 
     }
@@ -38,7 +31,7 @@ fun getConfBranch(vararg keys: String): JsonNode {
 
 fun setConfBranch(value: JsonNode, vararg keys: String) {
     load()
-    var node = db_tree!!
+    var node = db_tree
 
     for (key in keys.take(keys.size - 1)) {
         node = node.with(key)
@@ -51,14 +44,19 @@ fun setConfBranch(value: JsonNode, vararg keys: String) {
 
 private fun load() {
 
-    if (db_initialized)
+    if (::db_tree.isInitialized)
         return
 
     val fac = YAMLFactory()
     val mapper = ObjectMapper(fac)
 
     try {
-        val parser = fac.createParser(Files.newInputStream(File(get("db-path") as String).toPath()))
+        val parser = fac.createParser(
+                Files.newInputStream(
+                        File(get("db-path") as String).toPath()
+                )
+        )
+
         db_tree = mapper.readTree(parser)
     } catch (e: NoSuchFileException) {
         println("No database file found. Creating a default one.")

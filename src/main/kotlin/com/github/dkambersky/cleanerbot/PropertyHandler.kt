@@ -1,4 +1,4 @@
-package io
+package com.github.dkambersky.cleanerbot
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -22,7 +22,9 @@ fun get(key: String): Any? {
     load()
     val node = config_tree!!.path("config").path(key)
 
-    return node.asText()
+    val txtValue = node?.asText()
+
+    return if (txtValue == "") null else txtValue
 }
 
 private fun load() {

@@ -1,6 +1,6 @@
-package modules
+package com.github.dkambersky.cleanerbot.modules
 
-import ready
+import com.github.dkambersky.cleanerbot.ready
 import sx.blah.discord.api.events.Event
 import sx.blah.discord.api.events.IListener
 import sx.blah.discord.handle.impl.events.ReadyEvent
@@ -13,8 +13,11 @@ import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedE
  *  but hey, I like interfaces.
  */
 abstract class Module : IListener<Event> {
+    companion object {
+        @JvmField
+        val name: String = ""
+    }
 
-    abstract val name: String
 
     override fun handle(e: Event?) {
 
@@ -26,7 +29,7 @@ abstract class Module : IListener<Event> {
         /* Handle correct event type */
         when (e) {
             is MessageReceivedEvent -> handleMessageReceived(e)
-        /* here be any more events we wanna handle */
+            /* here be any more events we wanna handle */
         }
     }
 
@@ -39,4 +42,8 @@ abstract class Module : IListener<Event> {
         ready = true
     }
 
+
+    protected fun messageBack(message: String) {
+
+    }
 }

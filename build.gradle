@@ -1,8 +1,8 @@
 buildscript {
     ext {
-        kotlinVersion = '1.2.50'
+        kotlinVersion = '1.2.60'
         jacksonVersion = "2.9.3"
-        discord4jVersion = "2.9.3"
+        discord4jVersion = "2.10.1"
         khttpVersion = "0.1.0"
     }
 
@@ -72,13 +72,15 @@ dependencies {
     /* Challonge */
     compile group: 'com.exsoloscript.challonge', name: 'challonge-java', version: '1.0.3'
 
+    /* Reflections */
+    compile 'org.reflections:reflections:0.9.11'
 
 }
 
 jar {
     /* Specify the main method */
     manifest {
-        attributes 'Main-Class': 'BotKt'
+        attributes 'Main-Class': 'com.github.dkambersky.cleanerbot.BotKt'
     }
 
     /* Tell Gradle to build a fat jar */

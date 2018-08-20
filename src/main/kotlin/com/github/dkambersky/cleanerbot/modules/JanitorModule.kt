@@ -1,4 +1,4 @@
-package modules
+package com.github.dkambersky.cleanerbot.modules
 
 
 import kotlinx.coroutines.experimental.delay
@@ -6,7 +6,6 @@ import kotlinx.coroutines.experimental.launch
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
 import sx.blah.discord.handle.obj.IMessage
 import sx.blah.discord.util.RequestBuffer
-import java.lang.Thread.sleep
 
 
 /* ID of Pokécord's user acct to detect messages */
