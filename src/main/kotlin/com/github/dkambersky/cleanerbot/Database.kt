@@ -17,10 +17,8 @@ fun getConfBranch(vararg keys: String): JsonNode? {
     var node = db_tree
 
     for (key in keys) {
-
         val value = node.findValue(key)
-
-        if (value != null && value.isValueNode)
+        if (value != null && (value.isValueNode || value.isArray))
             return value
         else node = node.with(key)
 

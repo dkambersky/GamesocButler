@@ -5,26 +5,29 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import java.io.File
-import java.nio.file.Files
 import java.nio.file.NoSuchFileException
 
-/** Default IDEA comment
- * Created by David on 06/02/2017.
- */
-const val config_path = "./config.yml"
 
+const val config_path = "./config.yml"
 
 var initialized = false
 var config_tree: JsonNode? = null
 
 
-fun get(key: String): Any? {
+fun get(key: String): String? {
     load()
     val node = config_tree!!.path("config").path(key)
 
     val txtValue = node?.asText()
 
     return if (txtValue == "") null else txtValue
+}
+
+
+fun getArray(key: String): JsonNode? {
+    load()
+    return config_tree!!.path("config").path(key)
+
 }
 
 private fun load() {
@@ -36,12 +39,14 @@ private fun load() {
     val mapper = ObjectMapper(fac)
 
     try {
-        val parser = fac.createParser(Files.newInputStream(File(config_path).toPath()))
-        config_tree = mapper.readTree(parser)
+        config_tree = mapper.readTree(
+                fac.createParser(
+                        File(config_path).inputStream()
+                )
+        )
     } catch (e: NoSuchFileException) {
         println("No config file found. Creating a default one.")
         createConfig()
-
     }
 
 
