@@ -5,6 +5,7 @@ import com.github.dkambersky.cleanerbot.Module
 import com.github.dkambersky.cleanerbot.client
 import com.github.dkambersky.cleanerbot.getConfBranch
 import com.github.dkambersky.cleanerbot.setConfBranch
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import sx.blah.discord.api.events.Event
@@ -384,7 +385,7 @@ class GameRoleModule : Module("game-role") {
         if (!DELETION_ENABLED)
             return
 
-        launch {
+        GlobalScope.launch {
             delay(DELETE_TIMER)
             msg.delete()
         }

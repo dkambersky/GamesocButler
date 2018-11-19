@@ -2,6 +2,7 @@ package com.github.dkambersky.cleanerbot.modules
 
 
 import com.github.dkambersky.cleanerbot.Module
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import sx.blah.discord.api.events.Event
@@ -39,8 +40,8 @@ class JanitorModule : Module("janitor") {
             }
             if (msg.content.contains("Congratulations")) {
 
-                launch {
 
+            GlobalScope.launch{
                     delay(DELETE_TIMER)
                     dirtyByChannel[channelID]?.forEach {
                         fine("Trying to delete msg with text [$it]")
