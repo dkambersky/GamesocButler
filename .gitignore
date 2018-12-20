@@ -7,3 +7,4 @@ build/
 out/
 config.yml
 database.yml
+*.7z
