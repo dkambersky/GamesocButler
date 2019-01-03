@@ -9,10 +9,14 @@ import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
-
+/* --- Globals --- */
+/* Discord client for interfacing with the API */
 lateinit var client: IDiscordClient
 
-/* For timed tasks */
+/* Whether Discord API is ready */
+var ready = false
+
+/* Executor for timed tasks */
 val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 
 /* Bot for GameSoc; cleans up after Pokecord and manages game-related groups and happenings

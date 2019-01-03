@@ -41,7 +41,7 @@ class JanitorModule : Module("janitor") {
             if (msg.content.contains("Congratulations")) {
 
 
-            GlobalScope.launch{
+                GlobalScope.launch {
                     delay(DELETE_TIMER)
                     dirtyByChannel[channelID]?.forEach {
                         fine("Trying to delete msg with text [$it]")
