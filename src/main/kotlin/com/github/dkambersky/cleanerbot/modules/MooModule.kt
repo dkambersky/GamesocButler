@@ -19,7 +19,7 @@ import java.util.*
  * + moo
  * + harambe w/ status
  * . fortune - probably not coming, not without a *nix system :(
- *     - currently using a public API ¯\_(ツ)_/¯ but no cowsay there
+ *     - currently using a public API ¯\_(ツ)_/¯ well, gluing a fortune and cowsay API together
  */
 class MooModule : Module("moo") {
     private val mooPattern = Regex("m*o*")
@@ -63,7 +63,9 @@ class MooModule : Module("moo") {
 
     private fun fortune() =
             try {
-                get("http://yerkee.com/api/fortune").jsonObject.getString("fortune")
+                val fortune = get("http://yerkee.com/api/fortune").jsonObject.getString("fortune")
+                get("http://cowsay.morecode.org/say", params = mapOf("message" to fortune, "format" to "text"))
+                        .text.let { "```$it```" }
             } catch (e: Exception) {
                 "Our fortune teller is currently unavailable :("
             }
