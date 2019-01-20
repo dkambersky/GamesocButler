@@ -77,13 +77,13 @@ fun login() {
     }
 }
 
-fun sendMsg(channel: IChannel, message: String): IMessage {
-    return channel.sendMessage((message))
+fun sendMsg(channel: IChannel, message: String): IMessage? {
+    return if (message != "") channel.sendMessage(message) else null
 }
 
-fun sendMsg(channel: IChannel, message: String, timeout: Long): IMessage {
+fun sendMsg(channel: IChannel, message: String, timeout: Long): IMessage? {
     val msg = sendMsg(channel, message)
-    executor.schedule({ msg.delete() }, timeout, TimeUnit.MILLISECONDS)
+    executor.schedule({ msg?.delete() }, timeout, TimeUnit.MILLISECONDS)
 
     return msg
 

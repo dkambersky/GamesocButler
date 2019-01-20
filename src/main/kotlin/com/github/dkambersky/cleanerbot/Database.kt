@@ -29,10 +29,14 @@ fun getConfBranch(vararg keys: String): JsonNode? {
 
 fun setConfBranch(value: JsonNode, vararg keys: String) {
     load()
-    var node = db_tree
+    var node: JsonNode = db_tree
 
     for (key in keys.take(keys.size - 1)) {
-        node = node.with(key)
+        node = try {
+            node.with(key)
+        } catch (e:Exception){
+            node.withArray(key)
+        }
     }
 
     (node as ObjectNode).set(keys.last(), value)

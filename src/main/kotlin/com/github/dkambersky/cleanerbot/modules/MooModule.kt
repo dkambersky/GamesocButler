@@ -1,11 +1,13 @@
 package com.github.dkambersky.cleanerbot.modules
 
 import com.fasterxml.jackson.databind.node.IntNode
+import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.LongNode
 import com.github.dkambersky.cleanerbot.*
 import khttp.get
 import sx.blah.discord.api.events.Event
 import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
+import sx.blah.discord.handle.obj.IGuild
 import sx.blah.discord.handle.obj.IUser
 import java.util.*
 
@@ -35,10 +37,11 @@ class MooModule : Module("moo") {
         val msg =
                 when (contents) {
                     "f" -> "${increaseRespect(author)} pays their respects."
-                    "respect" -> "$author has ${getRespect(author)} respect."
+                    "blep" -> "${increaseRespect(author)} pays their respects."
+                    "respect" -> "$author has ${getRespect(author)} respects."
                     "top" -> getTopRespects()
                     "moo" -> "```         (__)\r\n         (oo)\r\n   /------\\/\r\n  / |    ||\r\n *  /\\---/\\\r\n    ~~   ~~\r\n....\"Have you mooed today?\"...```"
-                    "harambe?" -> harambeStatus()
+                    "harambe?" -> harambeStatus(e.message.guild)
                     "fortune" -> fortune()
                     else -> ""
                 }
@@ -51,13 +54,12 @@ class MooModule : Module("moo") {
         /* No exact match found, search for substrings */
         when {
             contents.contains("harambe") ->
-                sendMsg(e.message.channel, harambe())
+                sendMsg(e.message.channel, harambe(e.guild))
 
             mooPattern.matches(contents) -> {
                 sendMsg(channel, mooBack(contents))
             }
         }
-
 
     }
 
@@ -75,14 +77,14 @@ class MooModule : Module("moo") {
             "m".repeat(contents.count { it == 'm' } * 2) +
                     "o".repeat(contents.count { it == 'o' } * 2)
 
-    private fun harambeStatus(): String {
-
-        val streak = getConfBranch("harambe", "streak")?.asInt() ?: 0
-        val last = getConfBranch("harambe", "last")?.longValue() ?: return "Harambe was never mentioned before!"
+    private fun harambeStatus(guild: IGuild): String {
+        val serverNode = getConfBranch("moo", "harambe", guild.longID.toString())
+        val streak = serverNode?.get("streak")?.asInt() ?: 0
+        val last = serverNode?.get("last")?.longValue() ?: return "Harambe was never mentioned before!"
 
 
         /* Time, in hours, since Harambe was last mentioned  */
-        val hours = (last - System.currentTimeMillis()) / 360000
+        val hours = (System.currentTimeMillis() - last ) / 360000
 
         return if (streak >= 0)
             "Current streak: $streak days. Harambe was last mentioned $hours hours ago."
@@ -92,22 +94,38 @@ class MooModule : Module("moo") {
 
 
     /* Harambe */
-    private fun harambe(): String {
+    private fun harambe(guild: IGuild): String {
 
-        val streak = getConfBranch("harambe", "streak")?.intValue() ?: 0
+        val serverNode = getConfBranch("moo", "harambe", guild.longID.toString())
+        val streak = serverNode?.get("streak")?.asInt() ?: 0
+        val last = serverNode?.get("last")?.longValue() ?: return "Harambe was never mentioned before!"
+
 
         /* Time, in hours, since Harambe was last mentioned  */
-        val hours = (getConfBranch("harambe", "last")!!.longValue() - System.currentTimeMillis()) / 360000
+        val hours = (System.currentTimeMillis() - last) / 360000
 
-        setConfBranch(LongNode(System.currentTimeMillis()), "harambe", "last")
+
+        if(getConfBranch("moo", "harambe", guild.longID.toString()) == null){
+            /* Initialize new server */
+            val obj = JsonNodeFactory.instance.objectNode().apply {
+                put("streak", 0)
+                put("max", 0)
+                put("last", System.currentTimeMillis())
+                put("number", 0)
+
+            }
+            setConfBranch(obj, "moo", "harambe", guild.longID.toString())
+        }
+
+        setConfBranch(LongNode(System.currentTimeMillis()), "moo", "harambe", guild.longID.toString(), "last")
 
         if (hours > 48) {
-            setConfBranch(IntNode(0), "harambe", "streak")
+            setConfBranch(IntNode(0), "moo", "harambe", guild.longID.toString(), "streak")
             return "Days since Harambe was last mentioned: ${hours / 24} -> 0"
         }
 
         if (hours > 24) {
-            setConfBranch(IntNode(streak + 1), "harambe", "streak")
+            setConfBranch(IntNode(streak + 1), "moo", "harambe", guild.longID.toString(), "streak")
             return "Current Harambe daily streak: $streak"
         }
 
@@ -120,31 +138,36 @@ class MooModule : Module("moo") {
 
         var respect = 1
 
-        val branch = getConfBranch("respect", author.longID.toString())
+        val branch = getConfBranch("moo", "respect", author.longID.toString())
         if (branch is IntNode) respect = branch.intValue() + 1
 
-        setConfBranch(IntNode(respect), "respect", author.longID.toString())
+        setConfBranch(IntNode(respect), "moo", "respect", author.longID.toString())
 
         return author
     }
 
-    private fun getRespect(author: IUser): Int = getConfBranch("respect", author.longID.toString())?.intValue() ?: 0
+    private fun getRespect(author: IUser): Int = getConfBranch("moo", "respect", author.longID.toString())?.intValue()
+            ?: 0
 
     private fun getTopRespects(): String {
-        val respects = getConfBranch("respect")
+        val respects = getConfBranch("moo", "respect")
 
         if (respects == null || !respects.fields().hasNext())
             return "Nobody pays any respects around here!"
 
         /* Oh the laziness */
-        return "Here's a list:\n```" +
+        return "Give people a leaderboard, and they will try to climb it.\n```" +
                 respects.fields()
                         ?.asSequence()
                         ?.sortedWith(Comparator.comparingInt { it.value.intValue() })
                         ?.toList()
                         ?.reversed()
                         ?.fold("") { str, ele ->
-                            "$str\n${client.getUserByID(ele.key.toLong()).name}: ${ele.value}"
+                            val user = client.getUserByID(ele.key.toLong())
+                            if (user != null)
+                                "$str\n${user.name}: ${ele.value} respects"
+                            else
+                                str
                         } + "```"
     }
 }

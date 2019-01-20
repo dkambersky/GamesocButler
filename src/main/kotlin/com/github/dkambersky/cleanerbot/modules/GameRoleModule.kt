@@ -28,6 +28,8 @@ import java.util.*
  *  [ ] primitive event scheduler?
  *  [x] memes
  */
+
+
 class GameRoleModule : Module("game-role") {
     private val GAMESOC_BOT_CHANNEL = 266274174450794496L // 484444732399812620L
 
@@ -74,18 +76,6 @@ class GameRoleModule : Module("game-role") {
 
     /* Time in miliseconds to wait before deleting dialogue */
     val DELETE_TIMER = 10000L
-    private val dirtyByChannel = mutableMapOf<Long, MutableList<IMessage>>()
-
-    /* Never, ever touch these roles */
-    private val roleBlacklist = listOf(
-            "Social Secretary | Matteo Kekboi",
-            "President | Gurg",
-            "Server Owner",
-            "Treasurer | Moneybags",
-            "Secretary | Massive Hyena",
-            "LANMaster | The Sun God",
-            "Server Admin | Not a furry"
-    )
 
 
     private val memeResponses = mapOf(
@@ -391,12 +381,7 @@ class GameRoleModule : Module("game-role") {
         }
     }
 
-    private fun canManageRole(roleName: String): Boolean {
-        return true
-//                .and(!roleBlacklist.any { it == roleName })
-                .and(rolesManaged?.contains(roleName) ?: true)
-
-    }
+    private fun canManageRole(roleName: String): Boolean = rolesManaged?.contains(roleName) ?: false
 
 
     override fun defaults() = mapOf(
