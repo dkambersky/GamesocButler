@@ -1,5 +1,5 @@
 # Gamesoc Butler
-A bot written for the University of Edinburgh's Gaming society's Discord ([link]), mostly grows organically with what we need
+A bot written for the University of Edinburgh's Gaming society's Discord ([link](http://edingamesoc.co.uk/)), mostly grows organically with what we need
 
 ## Features
 The bot uses modules which can be turned on and off at will and developed / configured independently. Some notable modules:
