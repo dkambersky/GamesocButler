@@ -1,14 +1,12 @@
 package com.github.dkambersky.cleanerbot.modules
 
-
 import com.github.dkambersky.cleanerbot.Module
+import discord4j.core.`object`.entity.Message
+import discord4j.core.event.domain.Event
+import discord4j.core.event.domain.message.MessageCreateEvent
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import sx.blah.discord.api.events.Event
-import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
-import sx.blah.discord.handle.obj.IMessage
-import sx.blah.discord.util.RequestBuffer
 
 
 /* ID of Pokécord's user acct to detect messages */
@@ -22,30 +20,29 @@ const val FINE_LOGGING = false
 
 
 class JanitorModule : Module("janitor") {
+    private val dirtyByChannel = mutableMapOf<Long, MutableList<Message>>()
 
-    private val dirtyByChannel = mutableMapOf<Long, MutableList<IMessage>>()
-
-    override fun process(e: Event) {
-        if (e !is MessageReceivedEvent)
+    fun process(e: Event) {
+        if (e !is MessageCreateEvent)
             return
 
-        val channelID = e.channel.longID
+        val channelID = e.message.channelId.asLong()
         val msg = e.message
 
         if (msg.fromPokecord()) {
             fine("Msg from pokecord! ${e.message.content}")
-            if (msg.embeds.isNotEmpty() && msg.embeds.first().title == "\u200C\u200CA wild pokémon has appeared!") {
+            if (msg.embeds.isNotEmpty() && msg.embeds.first().title.get() == "\u200C\u200CA wild pokémon has appeared!") {
                 dirtyByChannel.getOrPut(channelID) { mutableListOf() }.add(msg)
                 return
             }
-            if (msg.content.contains("Congratulations")) {
+            if (msg.content.get().contains("Congratulations")) {
 
 
                 GlobalScope.launch {
                     delay(DELETE_TIMER)
                     dirtyByChannel[channelID]?.forEach {
                         fine("Trying to delete msg with text [$it]")
-                        RequestBuffer.request { it.delete() }
+                        it.delete()
                     }
                     dirtyByChannel.remove(channelID)
                 }
@@ -58,15 +55,15 @@ class JanitorModule : Module("janitor") {
 
     }
 
-    private fun isRelevantDialog(msg: IMessage): Boolean {
-        return dirtyByChannel.containsKey(msg.channel.longID) &&
-                (msg.content.startsWith("p!catch ")
-                        || (msg.fromPokecord()) && msg.content.contains("wrong pokémon"))
+    private fun isRelevantDialog(msg: Message): Boolean {
+        return dirtyByChannel.containsKey(msg.channelId.asLong()) &&
+                (msg.content.get().startsWith("p!catch ")
+                        || (msg.fromPokecord()) && msg.content.get().contains("wrong pokémon"))
     }
 
 }
 
-private fun IMessage.fromPokecord() = this.author.longID == POKECORD_ID
+private fun Message.fromPokecord() = this.author.get().id.asLong() == POKECORD_ID
 fun fine(msg: String) {
     if (FINE_LOGGING)
         println(msg)

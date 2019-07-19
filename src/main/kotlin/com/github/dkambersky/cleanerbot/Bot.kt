@@ -1,23 +1,26 @@
 package com.github.dkambersky.cleanerbot
 
+import discord4j.core.DiscordClient
+import discord4j.core.DiscordClientBuilder
+import discord4j.core.`object`.entity.Channel
+import discord4j.core.`object`.entity.Message
+import discord4j.core.event.domain.guild.GuildCreateEvent
+import discord4j.core.event.domain.lifecycle.ReadyEvent
 import org.reflections.Reflections
-import sx.blah.discord.api.ClientBuilder
-import sx.blah.discord.api.IDiscordClient
-import sx.blah.discord.handle.obj.IChannel
-import sx.blah.discord.handle.obj.IMessage
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 
 /* --- Globals --- */
 /* Discord client for interfacing with the API */
-lateinit var client: IDiscordClient
+lateinit var client: DiscordClient
 
 /* Whether Discord API is ready */
 var ready = false
 
 /* Executor for timed tasks */
 val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+
 
 /* Bot for GameSoc; cleans up after Pokecord and manages game-related groups and happenings
  * TODO rework the unholy abomination that is the config code
@@ -63,25 +66,40 @@ fun main(args: Array<String>) {
             .filter { enabledModules.contains(it.first) }
 
             /* Finally, register them */
-            .forEach { client.dispatcher.registerListener(it.second) }
+            .forEach {}
+
+
+
+
+    client.eventDispatcher
+            .on(ReadyEvent::class.java)
+            .map { it.guilds.size }
+            .flatMap {
+                client.eventDispatcher.on(GuildCreateEvent::class.java)
+                        .take(it.toLong()).last()
+            }
+            .subscribe {
+                ready = true
+            }
+
 }
 
 fun login() {
     val token = get("api-token")
             ?: throw Exception("Please specify an API token in config.yml!")
 
-    ClientBuilder().apply {
-        setMaxReconnectAttempts(1000)
-        withToken(token)
-        client = login()
-    }
+    client = DiscordClientBuilder(token)
+            .build()
+
+    client.login().block()
 }
 
-fun sendMsg(channel: IChannel, message: String): IMessage? {
-    return if (message != "") channel.sendMessage(message) else null
+
+fun sendMsg(channel: Channel, message: String): Message? {
+    return if (message != "") channel(message) else null
 }
 
-fun sendMsg(channel: IChannel, message: String, timeout: Long): IMessage? {
+fun sendMsg(channel: Channel, message: String, timeout: Long): Message? {
     val msg = sendMsg(channel, message)
     executor.schedule({ msg?.delete() }, timeout, TimeUnit.MILLISECONDS)
 

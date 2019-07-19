@@ -5,16 +5,16 @@ import com.github.dkambersky.cleanerbot.Module
 import com.github.dkambersky.cleanerbot.client
 import com.github.dkambersky.cleanerbot.getConfBranch
 import com.github.dkambersky.cleanerbot.setConfBranch
+import discord4j.core.`object`.entity.Message
+import discord4j.core.`object`.entity.Role
+import discord4j.core.event.domain.Event
+import discord4j.core.event.domain.UserUpdateEvent
+import discord4j.core.event.domain.message.MessageCreateEvent
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import sx.blah.discord.api.events.Event
-import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
-import sx.blah.discord.handle.impl.events.guild.member.UserJoinEvent
-import sx.blah.discord.handle.obj.*
-import sx.blah.discord.util.PermissionUtils
-import sx.blah.discord.util.RoleBuilder
 import java.awt.Color
+import java.security.Permissions
 import java.util.*
 
 /**
@@ -88,19 +88,19 @@ class GameRoleModule : Module("game-role") {
             "Server Admin | Not a furry" to "https://www.youtube.com/watch?v=R6wbTpBja9w"
     )
 
-    override fun process(e: Event) {
+    override fun    process(e: Event) {
         when (e) {
-            is MessageReceivedEvent -> {
+            is MessageCreateEvent-> {
                 process(e)
             }
-            is UserJoinEvent -> {
+            is UserUpdateEvent -> {
                 process(e)
             }
         }
     }
 
 
-    private fun process(e: UserJoinEvent) {
+    private fun process(e: UserUpdateEvent) {
         if (!greetingEnabled) {
             println("Greeting disabled. The conf? ${getConfBranch("game-role", "greeting-enabled")?.textValue()}")
             return
@@ -295,13 +295,15 @@ class GameRoleModule : Module("game-role") {
                     return
                 }
 
-                RoleBuilder(e.guild)
-                        .setMentionable(true)
-                        .setHoist(false)
-                        .withColor(Color.ORANGE)
-                        .withName(roleName)
-                        .build()
-                        .apply { e.guild.roles.add(this) }
+                e.
+//
+//                Role(e.guildId,)
+//                        .setMentionable(true)
+//                        .setHoist(false)
+//                        .withColor(Color.ORANGE)
+//                        .withName(roleName)
+//                        .build()
+//                        .apply { e.guild.roles.add(this) }
 
 
                 e.messageBack("Game added!")
@@ -371,7 +373,7 @@ class GameRoleModule : Module("game-role") {
         setConfBranch(node, "game-role", "roles-managed")
     }
 
-    private fun enqueueForDeletion(msg: IMessage) {
+    private fun enqueueForDeletion(msg: Message) {
         if (!DELETION_ENABLED)
             return
 
@@ -396,5 +398,3 @@ class GameRoleModule : Module("game-role") {
     }
 
 }
-
-
