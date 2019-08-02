@@ -7,6 +7,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import reactor.core.publisher.Mono
 
 
 /* ID of Pokécord's user acct to detect messages */
@@ -20,9 +21,13 @@ const val FINE_LOGGING = false
 
 
 class JanitorModule : Module("janitor") {
+    override fun process(e: Event): Mono<Void> {
+        return Mono.empty()
+    }
+
     private val dirtyByChannel = mutableMapOf<Long, MutableList<Message>>()
 
-    fun process(e: Event) {
+    fun processs(e: Event) {
         if (e !is MessageCreateEvent)
             return
 

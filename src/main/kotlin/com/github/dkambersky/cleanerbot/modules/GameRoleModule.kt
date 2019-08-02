@@ -2,19 +2,20 @@ package com.github.dkambersky.cleanerbot.modules
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.github.dkambersky.cleanerbot.Module
-import com.github.dkambersky.cleanerbot.client
 import com.github.dkambersky.cleanerbot.getConfBranch
 import com.github.dkambersky.cleanerbot.setConfBranch
+import com.github.dkambersky.cleanerbot.util.*
+import discord4j.core.`object`.entity.GuildMessageChannel
+import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Message
-import discord4j.core.`object`.entity.Role
+import discord4j.core.`object`.util.Snowflake
 import discord4j.core.event.domain.Event
-import discord4j.core.event.domain.UserUpdateEvent
+import discord4j.core.event.domain.guild.MemberJoinEvent
 import discord4j.core.event.domain.message.MessageCreateEvent
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.awt.Color
-import java.security.Permissions
+import reactor.core.publisher.Mono
 import java.util.*
 
 /**
@@ -31,6 +32,11 @@ import java.util.*
 
 
 class GameRoleModule : Module("game-role") {
+    override fun process(e: Event): Mono<Void> {
+        println("LOL")
+        return Mono.empty()
+    }
+
     private val GAMESOC_BOT_CHANNEL = 266274174450794496L // 484444732399812620L
 
     private val moderatorRoleIds = listOf(
@@ -88,53 +94,47 @@ class GameRoleModule : Module("game-role") {
             "Server Admin | Not a furry" to "https://www.youtube.com/watch?v=R6wbTpBja9w"
     )
 
-    override fun    process(e: Event) {
-        when (e) {
-            is MessageCreateEvent-> {
-                process(e)
-            }
-            is UserUpdateEvent -> {
-                process(e)
-            }
-        }
-    }
 
-
-    private fun process(e: UserUpdateEvent) {
+    private fun process(e: MemberJoinEvent) {
         if (!greetingEnabled) {
             println("Greeting disabled. The conf? ${getConfBranch("game-role", "greeting-enabled")?.textValue()}")
             return
         }
-        val channel = e.guild.getChannelByID(BOT_CHANNEL)
-                ?: e.guild.getChannelsByName("bot_hell").firstOrNull()
-                ?: e.guild.defaultChannel
 
-        println("Default channel is ${e.guild.getChannelsByName("general").firstOrNull()}, bot channel is ${channel.name}")
+        val guild = e.guild.block() ?: return
+        val user = e.member ?: return
+
+        val botChannel = guild.channels.filter {
+            it.id.asLong() == BOT_CHANNEL
+                    || it.name.startsWith("bot")
+        }.blockFirst()
+
+        val welcomeChannel = guild.channels.filter {
+            it.name.startsWith("general")
+        }.blockFirst() as GuildMessageChannel
 
         if (autoAssignRole != null)
-            e.user.addRole(
-                    e.guild.getRoleByID(autoAssignRole)
-            )
+            user.addRole(Snowflake.of(autoAssignRole)).block()
 
-        e.guild.getChannelsByName("general").firstOrNull()?.sendMessage(
-                "Welcome, ${e.user.mention()}!\n" +
-                        "If you'd like to play games with us, go to ${channel.mention()} and register yourself for games you're interested in.\n" +
-                        "You can see available commands with `-help` (but please keep it out of ${e.guild.getChannelsByName("general").firstOrNull()?.mention()}).")
+        welcomeChannel.sendMessage(
+                "Welcome, ${user.mention}!\n" +
+                        "If you'd like to play games with us, go to ${botChannel?.mention} and register yourself for games you're interested in.\n" +
+                        "You can see available commands with `-help` (but please keep it out of ${welcomeChannel?.mention}).")
     }
 
-    private fun process(e: MessageReceivedEvent) {
+    private fun process(e: MessageCreateEvent) {
         /* Meme section */
-        val text = e.message.content
+        val text = e.message.content.get()
         if (text == "!help") {
             e.messageBack("HELP IS NOT COMING...")
             return
         }
 
         if (commandPrefix != null &&
-                !e.message.content.regionMatches(0, commandPrefix, 0, commandPrefix.length))
+                !text.regionMatches(0, commandPrefix, 0, commandPrefix.length))
             return
 
-        val author = e.message.author
+        val author = e.message.author.get().asMember(e.guild.block()?.id ?: return).block() ?: return
 //        val tokens = e.message.content.removePrefix(commandPrefix).sub
         val command = text.removePrefix(commandPrefix).substringBefore(" ").toLowerCase()
         val argsFull = text.substringAfter(" ", "")
@@ -165,10 +165,12 @@ class GameRoleModule : Module("game-role") {
             println("Returning boi")
             return
         }
-        val role = e.guild.getRolesByName(roleName).firstOrNull()
+
+        val role = e.guild.block()!!.roles.filter { it.name == roleName }.blockFirst() ?: return
+        /*
 
 
-        /* Gigantic permissions debug part */
+        *//* Gigantic permissions debug part *//*
         val canNick = PermissionUtils.hasHierarchicalPermissions(
                 e.guild,
                 client.ourUser,
@@ -195,9 +197,9 @@ class GameRoleModule : Module("game-role") {
         )
 
         fine("Can manage nicknames? $canNick; Is higher? $isHigher; Can manage role? $canRole; Is higher in roles? $canRole2 ")
+*/
 
-
-        if (!canRole2) {
+        if (!false) {
             e.messageBack("I'm not allowed to manage that role.")
             return
         }
@@ -210,18 +212,19 @@ class GameRoleModule : Module("game-role") {
                 )
             }
             "join" -> {
-                if (role?.name == "Chill Chat Clan") {
-                    if (e.author.hasRole(role)) {
+                if (role.name == "Chill Chat Clan") {
+                    if (e.member.get().roles.any { it.id == role.id }.block() == true) {
                         e.messageBack("You're already chill!")
                         return
                     }
 
-                    val newNick = (author.getNicknameForGuild(e.message.guild)
-                            ?: author.getDisplayName(e.message.guild)).removePrefix("[CCC] ")
+                    val newNick = (author.nickname.orElse(author.displayName))
+                            .removePrefix("[CCC] ")
+
 
                     var failed = false
                     try {
-                        e.guild.setUserNickname(author, "[CCC] $newNick")
+                        setUserNickname(author, "[CCC] $newNick")
                     } catch (e: Exception) {
                         println("Permissions bad?")
                         failed = true
@@ -250,18 +253,18 @@ class GameRoleModule : Module("game-role") {
                     e.messageBack("That game role doesn't exist :(")
             }
             "leave" -> {
-                if (role?.name == "Chill Chat Clan") {
-                    if (!e.author.hasRole(role)) {
+                if (role.name == "Chill Chat Clan") {
+                    if (!author.hasRole(role)) {
                         e.messageBack("You're not chill in the first place!")
                         return
                     }
 
                     e.messageBack("You're no longer chill.")
                     author.removeRole(role)
-                    val newNick = (author.getNicknameForGuild(e.message.guild)
-                            ?: author.getDisplayName(e.message.guild)).removePrefix("[CCC] ")
+                    val newNick = (author.nickname.orElse(author.displayName))
+                            .removePrefix("[CCC] ")
                     try {
-                        e.guild.setUserNickname(author, newNick)
+                        setUserNickname(author, newNick)
                     } catch (e: Exception) {
                         println("Permissions bad?")
                         e.printStackTrace()
@@ -285,7 +288,7 @@ class GameRoleModule : Module("game-role") {
 
             }
             "addgame" -> {
-                if (!e.author.canAdmin(e.guild)) {
+                if (author.canAdmin()) {
                     e.messageBack("No can do boss.")
                     return
                 }
@@ -295,7 +298,6 @@ class GameRoleModule : Module("game-role") {
                     return
                 }
 
-                e.
 //
 //                Role(e.guildId,)
 //                        .setMentionable(true)
@@ -311,7 +313,7 @@ class GameRoleModule : Module("game-role") {
                 saveRoles()
             }
             "removegame" -> {
-                if (!e.author.canAdmin(e.guild)) {
+                if (author.canAdmin()) {
                     e.messageBack("No can do boss.")
                     return
                 }
@@ -335,7 +337,7 @@ class GameRoleModule : Module("game-role") {
 
                     return
                 }
-                val users = e.guild.getUsersByRole(role).map { if (enableMentions) it.mention() else it.getDisplayName(e.guild) }
+                val users = e.guild.getUsersByRole(role).map { if (enableMentions) it.mention else it.displayName }
                 e.messageBack("People playing ${role.name}:\n${users.joinToString(", ")}")
             }
             "listgames" -> {
@@ -350,19 +352,17 @@ class GameRoleModule : Module("game-role") {
 
     }
 
-    private fun IUser.canAdmin(guild: IGuild): Boolean {
-
-        return moderatorRoleIds.any {
-            val role: IRole? = guild.getRoleByID(it)
-            role != null && this.hasRole(role)
-        } || moderatorUserIds.any { this.longID == it }
+    private fun Member.canAdmin(): Boolean {
+        return moderatorRoleIds.any { modId ->
+            guild.block()!!.roleIds.any {
+                it.asLong() == modId
+                        && hasRole(it)
+            }
+        } || moderatorUserIds.any { this.id.asLong() == it }
 
     }
 
 
-    private fun MessageReceivedEvent.messageBack(message: String) {
-        enqueueForDeletion(this.channel.sendMessage(message))
-    }
 
     private fun saveRoles() {
 
@@ -397,4 +397,8 @@ class GameRoleModule : Module("game-role") {
         println("Game Role module initializing. Data: $rolePrefix, $rolesManaged, $roleSuffix")
     }
 
+
 }
+
+
+

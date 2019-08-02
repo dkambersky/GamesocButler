@@ -2,8 +2,8 @@ package com.github.dkambersky.cleanerbot
 
 import discord4j.core.DiscordClient
 import discord4j.core.DiscordClientBuilder
-import discord4j.core.`object`.entity.Channel
 import discord4j.core.`object`.entity.Message
+import discord4j.core.`object`.entity.MessageChannel
 import discord4j.core.event.domain.guild.GuildCreateEvent
 import discord4j.core.event.domain.lifecycle.ReadyEvent
 import org.reflections.Reflections
@@ -95,14 +95,13 @@ fun login() {
 }
 
 
-fun sendMsg(channel: Channel, message: String): Message? {
-    return if (message != "") channel(message) else null
+fun sendMsg(channel: MessageChannel, message: String): Message? {
+    return if (message != "") channel.createMessage(message).block() else null
 }
 
-fun sendMsg(channel: Channel, message: String, timeout: Long): Message? {
+fun sendMsg(channel: MessageChannel, message: String, timeout: Long): Message? {
     val msg = sendMsg(channel, message)
     executor.schedule({ msg?.delete() }, timeout, TimeUnit.MILLISECONDS)
-
     return msg
 
 }

@@ -3,12 +3,19 @@ package com.github.dkambersky.cleanerbot.modules
 import com.fasterxml.jackson.databind.node.IntNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.LongNode
-import com.github.dkambersky.cleanerbot.*
+import com.github.dkambersky.cleanerbot.Module
+import com.github.dkambersky.cleanerbot.client
+import com.github.dkambersky.cleanerbot.getConfBranch
+import com.github.dkambersky.cleanerbot.setConfBranch
+import com.github.dkambersky.cleanerbot.util.longID
+import com.github.dkambersky.cleanerbot.util.sendMessage
+import discord4j.core.`object`.entity.Guild
+import discord4j.core.`object`.entity.Member
+import discord4j.core.`object`.util.Snowflake
+import discord4j.core.event.domain.Event
+import discord4j.core.event.domain.message.MessageCreateEvent
 import khttp.get
-import sx.blah.discord.api.events.Event
-import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent
-import sx.blah.discord.handle.obj.IGuild
-import sx.blah.discord.handle.obj.IUser
+import reactor.core.publisher.Mono
 import java.util.*
 
 /**
@@ -24,13 +31,20 @@ import java.util.*
  *     - currently using a public API ¯\_(ツ)_/¯ well, gluing a fortune and cowsay API together
  */
 class MooModule : Module("moo") {
-    private val mooPattern = Regex("m*o*")
+    override fun process(e: Event): Mono<Void> {
+        return Mono.empty()
+    }
 
-    override fun process(e: Event) {
-        if (e !is MessageReceivedEvent)
+    private val mooPattern = Regex("m+o*")
+
+    fun processs(e: Event) {
+        if (e !is MessageCreateEvent)
             return
 
-        val (author, contents) = e.message.author to e.message.content.toLowerCase()
+        val (author, contents) = (e.message.author.get()
+                .asMember(e.guildId.get()).block() ?: return) to
+                e.message.content.get().toLowerCase()
+
         val channel = e.message.channel
 
         /* Search for exact matches first */
@@ -41,23 +55,23 @@ class MooModule : Module("moo") {
                     "respect" -> "$author has ${getRespect(author)} respects."
                     "top" -> getTopRespects()
                     "moo" -> "```         (__)\r\n         (oo)\r\n   /------\\/\r\n  / |    ||\r\n *  /\\---/\\\r\n    ~~   ~~\r\n....\"Have you mooed today?\"...```"
-                    "harambe?" -> harambeStatus(e.message.guild)
+                    "harambe?" -> harambeStatus(e.message.guild.block())
                     "fortune" -> fortune()
                     else -> ""
                 }
 
         if (msg != "") {
-            sendMsg(channel, msg)
+            channel.sendMessage(msg)
             return
         }
 
         /* No exact match found, search for substrings */
         when {
             contents.contains("harambe") ->
-                sendMsg(e.message.channel, harambe(e.guild))
+                e.message.channel.sendMessage(harambe(e.guild.block()))
 
             mooPattern.matches(contents) -> {
-                sendMsg(channel, mooBack(contents))
+                channel.sendMessage(mooBack(contents))
             }
         }
 
@@ -77,14 +91,14 @@ class MooModule : Module("moo") {
             "m".repeat(contents.count { it == 'm' } * 2) +
                     "o".repeat(contents.count { it == 'o' } * 2)
 
-    private fun harambeStatus(guild: IGuild): String {
+    private fun harambeStatus(guild: Guild): String {
         val serverNode = getConfBranch("moo", "harambe", guild.longID.toString())
         val streak = serverNode?.get("streak")?.asInt() ?: 0
         val last = serverNode?.get("last")?.longValue() ?: return "Harambe was never mentioned before!"
 
 
         /* Time, in hours, since Harambe was last mentioned  */
-        val hours = (System.currentTimeMillis() - last ) / 360000
+        val hours = (System.currentTimeMillis() - last) / 360000
 
         return if (streak >= 0)
             "Current streak: $streak days. Harambe was last mentioned $hours hours ago."
@@ -94,9 +108,9 @@ class MooModule : Module("moo") {
 
 
     /* Harambe */
-    private fun harambe(guild: IGuild): String {
+    private fun harambe(guild: Guild): String {
 
-        val serverNode = getConfBranch("moo", "harambe", guild.longID.toString())
+        val serverNode = getConfBranch("moo", "harambe", guild.id.asLong().toString())
         val streak = serverNode?.get("streak")?.asInt() ?: 0
         val last = serverNode?.get("last")?.longValue() ?: return "Harambe was never mentioned before!"
 
@@ -105,7 +119,7 @@ class MooModule : Module("moo") {
         val hours = (System.currentTimeMillis() - last) / 360000
 
 
-        if(getConfBranch("moo", "harambe", guild.longID.toString()) == null){
+        if (getConfBranch("moo", "harambe", guild.longID.toString()) == null) {
             /* Initialize new server */
             val obj = JsonNodeFactory.instance.objectNode().apply {
                 put("streak", 0)
@@ -134,19 +148,19 @@ class MooModule : Module("moo") {
     }
 
     /* Respects */
-    private fun increaseRespect(author: IUser): IUser {
+    private fun increaseRespect(author: Member): Member {
 
         var respect = 1
 
-        val branch = getConfBranch("moo", "respect", author.longID.toString())
+        val branch = getConfBranch("moo", "respect", author.id.asLong().toString())
         if (branch is IntNode) respect = branch.intValue() + 1
 
-        setConfBranch(IntNode(respect), "moo", "respect", author.longID.toString())
+        setConfBranch(IntNode(respect), "moo", "respect", author.id.asLong().toString())
 
         return author
     }
 
-    private fun getRespect(author: IUser): Int = getConfBranch("moo", "respect", author.longID.toString())?.intValue()
+    private fun getRespect(author: Member): Int = getConfBranch("moo", "respect", author.id.asLong().toString())?.intValue()
             ?: 0
 
     private fun getTopRespects(): String {
@@ -163,11 +177,12 @@ class MooModule : Module("moo") {
                         ?.toList()
                         ?.reversed()
                         ?.fold("") { str, ele ->
-                            val user = client.getUserByID(ele.key.toLong())
+                            val user = client.getUserById(Snowflake.of(ele.key.toLong()))
                             if (user != null)
-                                "$str\n${user.name}: ${ele.value} respects"
+                                "$str\n${user.block().username}: ${ele.value} respects"
                             else
                                 str
                         } + "```"
     }
 }
+
