@@ -4,6 +4,7 @@ import discord4j.core.DiscordClient
 import discord4j.core.DiscordClientBuilder
 import discord4j.core.`object`.entity.Message
 import discord4j.core.`object`.entity.MessageChannel
+import discord4j.core.event.domain.Event
 import discord4j.core.event.domain.guild.GuildCreateEvent
 import discord4j.core.event.domain.lifecycle.ReadyEvent
 import org.reflections.Reflections
@@ -25,12 +26,17 @@ val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecu
 /* Bot for GameSoc; cleans up after Pokecord and manages game-related groups and happenings
  * TODO rework the unholy abomination that is the config code
  */
+
+val activeModules = mutableListOf<Module>()
 fun main(args: Array<String>) {
-    login()
+    //    if (!::client.isInitialized)
+//        return
 
+    val token = get("api-token")
+            ?: throw Exception("Please specify an API token in config.yml!")
 
-    if (!::client.isInitialized)
-        return
+    client = DiscordClientBuilder(token)
+            .build()
 
     /* Oh Jackson */
     val enabledModules: Set<String> =
@@ -56,7 +62,7 @@ fun main(args: Array<String>) {
                  *  Both of which are pretty ugly. Thank Java's reflection and Kotlin's 'static' weirdness.
                  *  The modules are pretty much free to instantiate so ¯\_(ツ)_/¯
                  */
-                val instance = it.constructors.first().newInstance()
+                val instance = it.constructors.first().newInstance() as Module
                 val name = it.superclass.getMethod("name")
                         .invoke(instance) as String
                 name to instance
@@ -66,10 +72,9 @@ fun main(args: Array<String>) {
             .filter { enabledModules.contains(it.first) }
 
             /* Finally, register them */
-            .forEach {}
-
-
-
+            .forEach {
+                println("Loading module ${it.first}")
+                activeModules.add(it.second) }
 
     client.eventDispatcher
             .on(ReadyEvent::class.java)
@@ -82,18 +87,16 @@ fun main(args: Array<String>) {
                 ready = true
             }
 
-}
 
-fun login() {
-    val token = get("api-token")
-            ?: throw Exception("Please specify an API token in config.yml!")
+    client.eventDispatcher.on(Event::class.java)
+            .subscribe { event ->
+                activeModules.forEach { it.process(event).block() }
+            }
 
-    client = DiscordClientBuilder(token)
-            .build()
 
+    /* Login & Start receiving events */
     client.login().block()
 }
-
 
 fun sendMsg(channel: MessageChannel, message: String): Message? {
     return if (message != "") channel.createMessage(message).block() else null

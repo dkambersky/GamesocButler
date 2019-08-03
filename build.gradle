@@ -70,8 +70,17 @@ dependencies {
 
     /* Reflections */
     compile 'org.reflections:reflections:0.9.11'
-    
 
+     /* JOOQ - ORM */
+    compile group: 'org.jooq', name: 'jooq', version: '3.11.11'
+
+    /* Exposed - ORM*/
+    compile 'org.jetbrains.exposed:exposed:0.16.3'
+
+    /* Hoplite */
+    implementation 'com.sksamuel.hoplite:hoplite-core:1.0.2'
+    implementation 'com.sksamuel.hoplite:hoplite-json:1.0.2'
+    implementation 'com.sksamuel.hoplite:hoplite-toml:1.0.2'
 }
 
 jar {

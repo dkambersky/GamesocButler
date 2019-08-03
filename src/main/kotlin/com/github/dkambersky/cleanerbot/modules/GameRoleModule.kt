@@ -33,7 +33,11 @@ import java.util.*
 
 class GameRoleModule : Module("game-role") {
     override fun process(e: Event): Mono<Void> {
-        println("LOL")
+        when (e) {
+            is MessageCreateEvent -> process(e)
+            is MemberJoinEvent -> process(e)
+        }
+
         return Mono.empty()
     }
 
@@ -396,8 +400,6 @@ class GameRoleModule : Module("game-role") {
         /*rolePrefix = get("rolePrefix")*/
         println("Game Role module initializing. Data: $rolePrefix, $rolesManaged, $roleSuffix")
     }
-
-
 }
 
 

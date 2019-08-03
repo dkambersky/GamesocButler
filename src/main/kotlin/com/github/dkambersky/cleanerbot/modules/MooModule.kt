@@ -32,14 +32,14 @@ import java.util.*
  */
 class MooModule : Module("moo") {
     override fun process(e: Event): Mono<Void> {
+        if (e is MessageCreateEvent)
+            process(e)
         return Mono.empty()
     }
 
     private val mooPattern = Regex("m+o*")
 
-    fun processs(e: Event) {
-        if (e !is MessageCreateEvent)
-            return
+    fun process(e: MessageCreateEvent) {
 
         val (author, contents) = (e.message.author.get()
                 .asMember(e.guildId.get()).block() ?: return) to

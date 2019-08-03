@@ -22,14 +22,15 @@ const val FINE_LOGGING = false
 
 class JanitorModule : Module("janitor") {
     override fun process(e: Event): Mono<Void> {
+        if (e is MessageCreateEvent)
+            process(e)
+
         return Mono.empty()
     }
 
     private val dirtyByChannel = mutableMapOf<Long, MutableList<Message>>()
 
-    fun processs(e: Event) {
-        if (e !is MessageCreateEvent)
-            return
+    fun process(e: MessageCreateEvent) {
 
         val channelID = e.message.channelId.asLong()
         val msg = e.message

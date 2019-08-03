@@ -1,6 +1,7 @@
 package com.github.dkambersky.cleanerbot.modules
 
 import com.github.dkambersky.cleanerbot.Module
+import com.github.dkambersky.cleanerbot.util.messageBack
 import discord4j.core.event.domain.Event
 import discord4j.core.event.domain.message.MessageCreateEvent
 import reactor.core.publisher.Mono
@@ -13,7 +14,7 @@ class PongModule : Module("pong") {
             return Mono.empty()
 
         if (e.message.content.get() == "!ping")
-            return e.message.channel.doOnSuccess { it.createMessage("Pong!") }.then()
+             e.messageBack("Pong!")
 
         return Mono.empty()
     }
