@@ -81,6 +81,12 @@ dependencies {
     implementation 'com.sksamuel.hoplite:hoplite-core:1.0.2'
     implementation 'com.sksamuel.hoplite:hoplite-json:1.0.2'
     implementation 'com.sksamuel.hoplite:hoplite-toml:1.0.2'
+
+
+    /* Logging */
+    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+
+
 }
 
 jar {
