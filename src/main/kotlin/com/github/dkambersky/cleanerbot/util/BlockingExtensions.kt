@@ -21,7 +21,6 @@ fun Member.hasRole(role: Role) = roles.any { it.id == role.id }.block() ?: false
 fun Member.hasRole(role: Snowflake) = roles.any { it.id == role }.block() ?: false
 fun Member.addRole(role: Role) = addRole(role.id).block()
 fun Member.removeRole(role: Role) = removeRole(role.id).block()
-fun Member.getNickname() = nickname
 fun setUserNickname(member: Member, name: String) =
         member.edit { it.setNickname(name) }.block()
 
@@ -34,6 +33,4 @@ fun Mono<MessageChannel>.sendMessage(message: String) = block()?.sendMessage(mes
 
 var Guild.longID: Long
     get() = id.asLong()
-    set(value) {
-        -1
-    }
+    set(value) {}
