@@ -52,7 +52,7 @@ class MooModule : Module("moo") {
                 when (contents) {
                     "f" -> "${increaseRespect(author)} pays their respects."
                     "blep" -> "${increaseRespect(author)} pays their respects."
-                    "respect" -> "$author has ${getRespect(author)} respects."
+                    "respect" -> "${author.mention} has ${getRespect(author)} respects."
                     "top" -> getTopRespects()
                     "moo" -> "```         (__)\r\n         (oo)\r\n   /------\\/\r\n  / |    ||\r\n *  /\\---/\\\r\n    ~~   ~~\r\n....\"Have you mooed today?\"...```"
                     "harambe?" -> harambeStatus(e.message.guild.block())
@@ -71,6 +71,7 @@ class MooModule : Module("moo") {
                 e.message.channel.sendMessage(harambe(e.guild.block()))
 
             mooPattern.matches(contents) -> {
+                println("MOO MATCHES $contents")
                 channel.sendMessage(mooBack(contents))
             }
         }
@@ -148,8 +149,7 @@ class MooModule : Module("moo") {
     }
 
     /* Respects */
-    private fun increaseRespect(author: Member): Member {
-
+    private fun increaseRespect(author: Member): String {
         var respect = 1
 
         val branch = getConfBranch("moo", "respect", author.id.asLong().toString())
@@ -157,7 +157,7 @@ class MooModule : Module("moo") {
 
         setConfBranch(IntNode(respect), "moo", "respect", author.id.asLong().toString())
 
-        return author
+        return author.nicknameMention
     }
 
     private fun getRespect(author: Member): Int = getConfBranch("moo", "respect", author.id.asLong().toString())?.intValue()
@@ -185,4 +185,3 @@ class MooModule : Module("moo") {
                         } + "```"
     }
 }
-

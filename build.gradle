@@ -5,6 +5,7 @@ buildscript {
         jacksonVersion = "2.9.3"
         discord4jVersion = "3.0.+"
         khttpVersion = "0.1.0"
+        log4jVersion = "2.11.1"
     }
 
     repositories {
@@ -71,7 +72,7 @@ dependencies {
     /* Reflections */
     compile 'org.reflections:reflections:0.9.11'
 
-     /* JOOQ - ORM */
+    /* JOOQ - ORM */
     compile group: 'org.jooq', name: 'jooq', version: '3.11.11'
 
     /* Exposed - ORM*/
@@ -83,9 +84,10 @@ dependencies {
     implementation 'com.sksamuel.hoplite:hoplite-toml:1.0.2'
 
 
-    /* Logging */
-    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
-
+    /* Logging - Log4J2 */
+    implementation "org.apache.logging.log4j:log4j-api:$log4jVersion"
+    implementation "org.apache.logging.log4j:log4j-core:$log4jVersion"
+    implementation "org.apache.logging.log4j:log4j-slf4j-impl:$log4jVersion"
 
 }
 
