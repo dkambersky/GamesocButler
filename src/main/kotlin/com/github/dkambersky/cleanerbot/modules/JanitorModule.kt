@@ -41,7 +41,7 @@ class JanitorModule : Module("janitor") {
                 dirtyByChannel.getOrPut(channelID) { mutableListOf() }.add(msg)
                 return
             }
-            if (msg.content.get().contains("Congratulations")) {
+            if (msg.content.orElse("").contains("Congratulations")) {
 
 
                 GlobalScope.launch {
@@ -63,8 +63,8 @@ class JanitorModule : Module("janitor") {
 
     private fun isRelevantDialog(msg: Message): Boolean {
         return dirtyByChannel.containsKey(msg.channelId.asLong()) &&
-                (msg.content.get().startsWith("p!catch ")
-                        || (msg.fromPokecord()) && msg.content.get().contains("wrong pokémon"))
+                (msg.content.orElse("").startsWith("p!catch ")
+                        || (msg.fromPokecord()) && msg.content.orElse("").contains("wrong pokémon"))
     }
 
 }

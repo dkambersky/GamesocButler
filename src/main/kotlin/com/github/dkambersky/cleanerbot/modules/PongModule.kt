@@ -13,7 +13,7 @@ class PongModule : Module("pong") {
         if (e !is MessageCreateEvent)
             return Mono.empty()
 
-        if (e.message.content.get() == "!ping")
+        if (e.message.content.orElse("") == "!ping")
              e.messageBack("Pong!")
 
         return Mono.empty()

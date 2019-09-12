@@ -123,12 +123,12 @@ class GameRoleModule : Module("game-role") {
         welcomeChannel.sendMessage(
                 "Welcome, ${user.mention}!\n" +
                         "If you'd like to play games with us, go to ${botChannel?.mention} and register yourself for games you're interested in.\n" +
-                        "You can see available commands with `-help` (but please keep it out of ${welcomeChannel?.mention}).")
+                        "You can see available commands with `-help` (but please keep it out of ${welcomeChannel.mention}).")
     }
 
     private fun process(e: MessageCreateEvent) {
         /* Meme section */
-        val text = e.message.content.get()
+        val text = e.message.content.orElse("")
         if (text == "!help") {
             e.messageBack("HELP IS NOT COMING...")
             return
@@ -153,6 +153,8 @@ class GameRoleModule : Module("game-role") {
 //            "$rolePrefix${tokens[1]}$roleSuffix"
             argsFull
 
+
+        println("Wroking iwth role $roleName")
         if (roleName == "CCC")
             roleName = "Chill Chat Clan"
 
@@ -251,7 +253,6 @@ class GameRoleModule : Module("game-role") {
                         e.messageBack("You've been enlisted!")
                     } else {
                         e.messageBack("You're already registered!")
-
                     }
                 } else
                     e.messageBack("That game role doesn't exist :(")
@@ -363,13 +364,9 @@ class GameRoleModule : Module("game-role") {
                         && hasRole(it)
             }
         } || moderatorUserIds.any { this.id.asLong() == it }
-
     }
 
-
-
     private fun saveRoles() {
-
         val node = JsonNodeFactory.instance.arrayNode().apply {
             rolesManaged?.forEach { add(it) }
         }

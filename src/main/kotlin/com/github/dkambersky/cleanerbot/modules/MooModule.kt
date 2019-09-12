@@ -43,7 +43,7 @@ class MooModule : Module("moo") {
 
         val (author, contents) = (e.message.author.get()
                 .asMember(e.guildId.get()).block() ?: return) to
-                e.message.content.get().toLowerCase()
+                e.message.content.orElse("").toLowerCase()
 
         val channel = e.message.channel
 
@@ -71,7 +71,10 @@ class MooModule : Module("moo") {
                 e.message.channel.sendMessage(harambe(e.guild.block()))
 
             mooPattern.matches(contents) -> {
-                println("MOO MATCHES $contents")
+                if (e.message.authorAsMember.block()?.id == e.client.selfId.get())
+                    return
+
+                    println("MOO MATCHES $contents")
                 channel.sendMessage(mooBack(contents))
             }
         }

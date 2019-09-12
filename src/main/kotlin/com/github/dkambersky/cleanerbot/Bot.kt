@@ -7,10 +7,14 @@ import discord4j.core.`object`.entity.MessageChannel
 import discord4j.core.event.domain.Event
 import discord4j.core.event.domain.guild.GuildCreateEvent
 import discord4j.core.event.domain.lifecycle.ReadyEvent
+import discord4j.rest.request.RouteMatcher
+import discord4j.rest.request.RouterOptions
+import discord4j.rest.response.ResponseFunction
 import org.reflections.Reflections
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
+import java.util.logging.Logger
 
 /* --- Globals --- */
 /* Discord client for interfacing with the API */
@@ -36,6 +40,11 @@ fun main(args: Array<String>) {
             ?: throw Exception("Please specify an API token in config.yml!")
 
     client = DiscordClientBuilder(token)
+            .setRouterOptions(
+                    RouterOptions.builder()
+                            .onClientResponse(ResponseFunction.emptyOnErrorStatus(RouteMatcher.any()))
+                            .build()
+            )
             .build()
 
     /* Oh Jackson */
@@ -74,7 +83,8 @@ fun main(args: Array<String>) {
             /* Finally, register them */
             .forEach {
                 println("Loading module ${it.first}")
-                activeModules.add(it.second) }
+                activeModules.add(it.second)
+            }
 
     client.eventDispatcher
             .on(ReadyEvent::class.java)
@@ -95,6 +105,7 @@ fun main(args: Array<String>) {
 
 
     /* Login & Start receiving events */
+    Logger.getAnonymousLogger().info("Loaded")
     client.login().block()
 }
 
