@@ -37,7 +37,7 @@ class MooModule : Module("moo") {
         return Mono.empty()
     }
 
-    private val mooPattern = Regex("m+o*")
+    private val mooPattern = Regex("m+oo+")
 
     fun process(e: MessageCreateEvent) {
 
@@ -61,6 +61,7 @@ class MooModule : Module("moo") {
                 }
 
         if (msg != "") {
+            println("Sending message with content [$msg]")
             channel.sendMessage(msg)
             return
         }
