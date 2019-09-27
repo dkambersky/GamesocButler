@@ -11,6 +11,7 @@ import discord4j.rest.request.RouteMatcher
 import discord4j.rest.request.RouterOptions
 import discord4j.rest.response.ResponseFunction
 import org.reflections.Reflections
+import reactor.core.publisher.Mono
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -98,15 +99,28 @@ fun main(args: Array<String>) {
             }
 
 
-    client.eventDispatcher.on(Event::class.java)
+    client.eventDispatcher
+            .on(Event::class.java)
+            .onErrorResume { e -> Mono.empty() }
             .subscribe { event ->
-                activeModules.forEach { it.process(event).block() }
+                Logger.getGlobal().info("PROCESSING EVENT $event")
+                activeModules.forEach {
+                    try {
+                        it.process(event)
+                                .onErrorResume { e -> Mono.empty() }
+                                .block()
+                    } catch (e: Exception) {
+                        /* Poor man's error handling */
+                        Logger.global.warning("Error: $e")
+                    }
+                }
+
             }
 
 
     /* Login & Start receiving events */
     Logger.getAnonymousLogger().info("Loaded")
-    client.login().block()
+    client.login().onErrorResume { Mono.empty() }.block()
 }
 
 fun sendMsg(channel: MessageChannel, message: String): Message? {
