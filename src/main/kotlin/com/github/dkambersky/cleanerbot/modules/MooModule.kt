@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.LongNode
 import com.github.dkambersky.cleanerbot.Module
 import com.github.dkambersky.cleanerbot.client
-import com.github.dkambersky.cleanerbot.getConfBranch
+import com.github.dkambersky.cleanerbot.conf
 import com.github.dkambersky.cleanerbot.setConfBranch
 import com.github.dkambersky.cleanerbot.util.longID
 import com.github.dkambersky.cleanerbot.util.sendMessage
@@ -97,25 +97,26 @@ class MooModule : Module("moo") {
                     "o".repeat(contents.count { it == 'o' } * 2)
 
     private fun harambeStatus(guild: Guild): String {
-        val serverNode = getConfBranch("moo", "harambe", guild.longID.toString())
-        val streak = serverNode?.get("streak")?.asInt() ?: 0
-        val last = serverNode?.get("last")?.longValue() ?: return "Harambe was never mentioned before!"
+    val serverNode = conf("moo", "harambe", guild.longID.toString())
+            val streak = serverNode?.get("streak").toInt() ?: 0
+            val last = serverNode?.get("last")?.longValue() ?: return "Harambe was never mentioned before!"
 
 
-        /* Time, in hours, since Harambe was last mentioned  */
-        val hours = (System.currentTimeMillis() - last) / 360000
+            /* Time, in hours, since Harambe was last mentioned  */
+            val hours = (System.currentTimeMillis() - last) / 360000
 
-        return if (streak >= 0)
-            "Current streak: $streak days. Harambe was last mentioned $hours hours ago."
-        else
-            "Harambe is forgotten :( Last mention was $hours hours ago."
+            return if (streak >= 0)
+                "Current streak: $streak days. Harambe was last mentioned $hours hours ago."
+            else
+                "Harambe is forgotten :( Last mention was $hours hours ago."
+
     }
 
 
     /* Harambe */
     private fun harambe(guild: Guild): String {
 
-        val serverNode = getConfBranch("moo", "harambe", guild.id.asLong().toString())
+        val serverNode = conf("moo", "harambe", guild.id.asLong().toString())
         val streak = serverNode?.get("streak")?.asInt() ?: 0
         val last = serverNode?.get("last")?.longValue() ?: return "Harambe was never mentioned before!"
 
@@ -124,7 +125,7 @@ class MooModule : Module("moo") {
         val hours = (System.currentTimeMillis() - last) / 360000
 
 
-        if (getConfBranch("moo", "harambe", guild.longID.toString()) == null) {
+        if (conf("moo", "harambe", guild.longID.toString()) == null) {
             /* Initialize new server */
             val obj = JsonNodeFactory.instance.objectNode().apply {
                 put("streak", 0)
@@ -156,7 +157,7 @@ class MooModule : Module("moo") {
     private fun increaseRespect(author: Member): String {
         var respect = 1
 
-        val branch = getConfBranch("moo", "respect", author.id.asLong().toString())
+        val branch = conf("moo", "respect", author.id.asLong().toString())
         if (branch is IntNode) respect = branch.intValue() + 1
 
         setConfBranch(IntNode(respect), "moo", "respect", author.id.asLong().toString())
@@ -164,11 +165,11 @@ class MooModule : Module("moo") {
         return author.nicknameMention
     }
 
-    private fun getRespect(author: Member): Int = getConfBranch("moo", "respect", author.id.asLong().toString())?.intValue()
+    private fun getRespect(author: Member): Int = conf("moo", "respect", author.id.asLong().toString())?.intValue()
             ?: 0
 
     private fun getTopRespects(): String {
-        val respects = getConfBranch("moo", "respect")
+        val respects = conf("moo", "respect")
 
         if (respects == null || !respects.fields().hasNext())
             return "Nobody pays any respects around here!"
