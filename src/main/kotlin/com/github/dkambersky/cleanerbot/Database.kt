@@ -1,10 +1,5 @@
 package com.github.dkambersky.cleanerbot
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.NoSuchFileException
@@ -34,12 +29,14 @@ fun setConfBranch(value: JsonNode, vararg keys: String) {
     for (key in keys.take(keys.size - 1)) {
         node = try {
             node.with(key)
-        } catch (e:Exception){
+        } catch (e: Exception) {
             node.withArray(key)
         }
     }
 
-    (node as ObjectNode).set(keys.last(), value)
+    val final: ObjectNode = node as ObjectNode
+    final.set(keys.last(), value)
+
     save()
 
 }

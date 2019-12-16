@@ -1,11 +1,12 @@
 buildscript {
     ext {
-        kotlinVersion = '1.3.41'
-        coroutinesVersion = '1.0.1'
-        jacksonVersion = "2.9.3"
+        kotlinVersion = '1.3.61'
+        coroutinesVersion = '1.3.3'
+        jacksonVersion = "2.10.1"
         discord4jVersion = "3.0.+"
-        khttpVersion = "0.1.0"
+        khttpVersion = "1.0.0"
         log4jVersion = "2.11.1"
+        konfVersion = "0.21.0"
     }
 
     repositories {
@@ -16,15 +17,13 @@ buildscript {
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}"
         classpath "org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}"
-        classpath "com.fasterxml.jackson.module:jackson-module-kotlin:${jacksonVersion}"
         classpath "khttp:khttp:${khttpVersion}"
-
     }
 }
 
-// name 'cleanerbot'
-group 'dkambersky'
-version '1.0-SNAPSHOT'
+rootProject.name = 'gamesoc-janitor'
+group = 'dkambersky'
+version = '1.0-SNAPSHOT'
 
 apply plugin: 'kotlin'
 
@@ -56,9 +55,6 @@ dependencies {
     compile("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
     compile "org.jetbrains.kotlinx:kotlinx-coroutines-core:${coroutinesVersion}"
 
-    /* Jackson */
-    compile("com.fasterxml.jackson.module:jackson-module-kotlin:${jacksonVersion}")
-    compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-yaml', version: '2.9.4'
 
     /* kHTTP */
     compile "khttp:khttp:0.1.0"
@@ -78,10 +74,13 @@ dependencies {
     /* Exposed - ORM*/
     compile 'org.jetbrains.exposed:exposed:0.16.3'
 
-    /* Hoplite */
-    implementation 'com.sksamuel.hoplite:hoplite-core:1.0.2'
-    implementation 'com.sksamuel.hoplite:hoplite-json:1.0.2'
-    implementation 'com.sksamuel.hoplite:hoplite-toml:1.0.2'
+    /* Konf */
+    compile "com.uchuhimo:konf-core:${konfVersion}"
+    compile "com.uchuhimo:konf-yaml:${konfVersion}"
+    compile "com.uchuhimo:konf-toml:${konfVersion}"
+
+
+
 
 
     /* Logging - Log4J2 */
