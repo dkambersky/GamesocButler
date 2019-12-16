@@ -2,7 +2,7 @@ package com.github.dkambersky.cleanerbot.modules
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.github.dkambersky.cleanerbot.Module
-import com.github.dkambersky.cleanerbot.getConfBranch
+import com.github.dkambersky.cleanerbot.conf
 import com.github.dkambersky.cleanerbot.setConfBranch
 import com.github.dkambersky.cleanerbot.util.*
 import discord4j.core.`object`.entity.GuildMessageChannel
@@ -57,15 +57,14 @@ class GameRoleModule : Module("game-role") {
             108979387755401216
     )
 
-    private val greetingEnabled: Boolean = getConfBranch("game-role", "greeting-enabled")?.textValue()?.toBoolean()
-            ?: true
-    private val autoAssignRole: Long? = getConfBranch("game-role", "auto-assigned-role-id")?.textValue()?.toLongOrNull()
-    private val rolePrefix: String? = getConfBranch("game-role", "prefix")?.textValue()
-    private val roleSuffix = getConfBranch("game-role", "suffix")?.textValue()
-    private val enableMentions = getConfBranch("game-role", "enableMentions")?.textValue()?.toBoolean() ?: false
-    private val rolesManaged: MutableList<String>? = getConfBranch("game-role", "roles-managed")?.map { it.textValue() }?.toMutableList()
-    private val BOT_CHANNEL = getConfBranch("game-role", "bot-channel")?.textValue()?.toLongOrNull()
-            ?: GAMESOC_BOT_CHANNEL
+    private val greetingEnabled = conf("game-role", "greeting-enabled") ?: false
+    private val autoAssignRole = conf<Long?>("game-role", "auto-assigned-role-id")
+    private val rolePrefix: String? = conf("game-role", "prefix")
+    private val roleSuffix = conf<String>("game-role", "suffix")
+    private val enableMentions = conf("game-role", "enableMentions") ?: false
+    private val rolesManaged: MutableList<String>? = conf<MutableList<String?>>("game-role", "roles-managed")
+            .toMutableList().mapNotNull { it.toString() }.toMutableList()
+    private val BOT_CHANNEL = conf("game-role", "bot-channel") ?: GAMESOC_BOT_CHANNEL
     private val DELETION_ENABLED = false
 
     /* The whole permission logic needs _major_ cleanup lol */
@@ -101,7 +100,7 @@ class GameRoleModule : Module("game-role") {
 
     private fun process(e: MemberJoinEvent) {
         if (!greetingEnabled) {
-            println("Greeting disabled. The conf? ${getConfBranch("game-role", "greeting-enabled")?.textValue()}")
+            println("Greeting disabled. The conf? ${conf<Boolean?>("game-role", "greeting-enabled")}")
             return
         }
 
@@ -154,7 +153,7 @@ class GameRoleModule : Module("game-role") {
             argsFull
 
 
-        println("Wroking iwth role $roleName")
+        println("Wroking with role [$roleName]")
         if (roleName == "CCC")
             roleName = "Chill Chat Clan"
 
@@ -165,14 +164,14 @@ class GameRoleModule : Module("game-role") {
                 command != "addgame" &&
                 command != "removegame"
         ) {
-            if (knownCommands.any { it == command }) {
+            if (knownCommands.none { it == command }) {
                 e.messageBack("That isn't a game role.")
             }
             println("Returning boi")
             return
         }
 
-        val role = e.guild.block()!!.roles.filter { it.name == roleName }.blockFirst() ?: return
+        val role = e.guild.block()!!.roles.filter { it.name == roleName }.blockFirst()
         /*
 
 
@@ -205,7 +204,8 @@ class GameRoleModule : Module("game-role") {
         fine("Can manage nicknames? $canNick; Is higher? $isHigher; Can manage role? $canRole; Is higher in roles? $canRole2 ")
 */
 
-        if (!false) {
+        /* TODO role hierarchy stuff */
+        if (false) {
             e.messageBack("I'm not allowed to manage that role.")
             return
         }

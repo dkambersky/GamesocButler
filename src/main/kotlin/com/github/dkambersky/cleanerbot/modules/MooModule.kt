@@ -1,22 +1,9 @@
 package com.github.dkambersky.cleanerbot.modules
 
-import com.fasterxml.jackson.databind.node.IntNode
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
-import com.fasterxml.jackson.databind.node.LongNode
 import com.github.dkambersky.cleanerbot.Module
-import com.github.dkambersky.cleanerbot.client
-import com.github.dkambersky.cleanerbot.conf
-import com.github.dkambersky.cleanerbot.setConfBranch
-import com.github.dkambersky.cleanerbot.util.longID
-import com.github.dkambersky.cleanerbot.util.sendMessage
-import discord4j.core.`object`.entity.Guild
-import discord4j.core.`object`.entity.Member
-import discord4j.core.`object`.util.Snowflake
 import discord4j.core.event.domain.Event
 import discord4j.core.event.domain.message.MessageCreateEvent
-import khttp.get
 import reactor.core.publisher.Mono
-import java.util.*
 
 /**
  * Quick little module mimicking moobot, to get a hang of the API
@@ -36,7 +23,7 @@ class MooModule : Module("moo") {
             process(e)
         return Mono.empty()
     }
-
+/*
     private val mooPattern = Regex("m+oo+")
 
     fun process(e: MessageCreateEvent) {
@@ -47,7 +34,7 @@ class MooModule : Module("moo") {
 
         val channel = e.message.channel
 
-        /* Search for exact matches first */
+        *//* Search for exact matches first *//*
         val msg =
                 when (contents) {
                     "f" -> "${increaseRespect(author)} pays their respects."
@@ -66,7 +53,7 @@ class MooModule : Module("moo") {
             return
         }
 
-        /* No exact match found, search for substrings */
+        *//* No exact match found, search for substrings *//*
         when {
             contents.contains("harambe") ->
                 e.message.channel.sendMessage(harambe(e.guild.block()))
@@ -97,12 +84,12 @@ class MooModule : Module("moo") {
                     "o".repeat(contents.count { it == 'o' } * 2)
 
     private fun harambeStatus(guild: Guild): String {
-    val serverNode = conf("moo", "harambe", guild.longID.toString())
+    val serverNode = conf<Long>("moo", "harambe", guild.longID.toString())
             val streak = serverNode?.get("streak").toInt() ?: 0
             val last = serverNode?.get("last")?.longValue() ?: return "Harambe was never mentioned before!"
 
 
-            /* Time, in hours, since Harambe was last mentioned  */
+            *//* Time, in hours, since Harambe was last mentioned  *//*
             val hours = (System.currentTimeMillis() - last) / 360000
 
             return if (streak >= 0)
@@ -113,20 +100,20 @@ class MooModule : Module("moo") {
     }
 
 
-    /* Harambe */
+    *//* Harambe *//*
     private fun harambe(guild: Guild): String {
 
-        val serverNode = conf("moo", "harambe", guild.id.asLong().toString())
+        val serverNode = conf<Long>("moo", "harambe", guild.id.asLong().toString())
         val streak = serverNode?.get("streak")?.asInt() ?: 0
         val last = serverNode?.get("last")?.longValue() ?: return "Harambe was never mentioned before!"
 
 
-        /* Time, in hours, since Harambe was last mentioned  */
+        *//* Time, in hours, since Harambe was last mentioned  *//*
         val hours = (System.currentTimeMillis() - last) / 360000
 
 
         if (conf("moo", "harambe", guild.longID.toString()) == null) {
-            /* Initialize new server */
+            *//* Initialize new server *//*
             val obj = JsonNodeFactory.instance.objectNode().apply {
                 put("streak", 0)
                 put("max", 0)
@@ -153,7 +140,7 @@ class MooModule : Module("moo") {
 
     }
 
-    /* Respects */
+    *//* Respects *//*
     private fun increaseRespect(author: Member): String {
         var respect = 1
 
@@ -169,12 +156,12 @@ class MooModule : Module("moo") {
             ?: 0
 
     private fun getTopRespects(): String {
-        val respects = conf("moo", "respect")
+        val respects = conf<List<Pair<Long, Int>>>("moo", "respect")
 
         if (respects == null || !respects.fields().hasNext())
             return "Nobody pays any respects around here!"
 
-        /* Oh the laziness */
+        *//* Oh the laziness *//*
         return "Give people a leaderboard, and they will try to climb it.\n```" +
                 respects.fields()
                         ?.asSequence()
@@ -188,5 +175,5 @@ class MooModule : Module("moo") {
                             else
                                 str
                         } + "```"
-    }
+    }*/
 }

@@ -17,7 +17,7 @@ const val POKECORD_ID = 365975655608745985L
 const val DELETE_TIMER = 5000L
 
 /* Whether to log every little thing */
-const val FINE_LOGGING = false
+const val FINE_LOGGING = true
 
 
 class JanitorModule : Module("janitor") {
@@ -31,7 +31,8 @@ class JanitorModule : Module("janitor") {
     private val dirtyByChannel = mutableMapOf<Long, MutableList<Message>>()
 
     fun process(e: MessageCreateEvent) {
-
+        println("WHOO")
+        fine("Processing MessageCreate - janitor")
         val channelID = e.message.channelId.asLong()
         val msg = e.message
 
@@ -42,8 +43,6 @@ class JanitorModule : Module("janitor") {
                 return
             }
             if (msg.content.orElse("").contains("Congratulations")) {
-
-
                 GlobalScope.launch {
                     delay(DELETE_TIMER)
                     dirtyByChannel[channelID]?.forEach {

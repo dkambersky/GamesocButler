@@ -33,11 +33,8 @@ val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecu
  */
 
 val activeModules = mutableListOf<Module>()
-fun main(args: Array<String>) {
-    //    if (!::client.isInitialized)
-//        return
-
-    val token = get("api-token")
+fun main() {
+    val token = conf<String?>("apiToken")
             ?: throw Exception("Please specify an API token in config.yml!")
 
     client = DiscordClientBuilder(token)
@@ -48,15 +45,7 @@ fun main(args: Array<String>) {
             )
             .build()
 
-    /* Oh Jackson */
-    val enabledModules: Set<String> =
-            getArray("enabled-modules")
-                    ?.iterator()
-                    ?.asSequence()
-                    ?.map { it.textValue() }
-                    ?.toMutableSet()
-                    ?.apply { add("init") }
-                    ?: throw Exception("Please enable at least one module.")
+    val enabledModules = conf<MutableSet<String>>("enabled-modules").apply { add("init") }
 
 
     Reflections("com.github.dkambersky.cleanerbot")
