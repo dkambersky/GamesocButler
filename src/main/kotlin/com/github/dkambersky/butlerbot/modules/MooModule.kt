@@ -2,7 +2,6 @@ package com.github.dkambersky.butlerbot.modules
 
 import com.github.dkambersky.butlerbot.Module
 import discord4j.core.event.domain.Event
-import discord4j.core.event.domain.message.MessageCreateEvent
 import reactor.core.publisher.Mono
 
 /**
@@ -19,8 +18,8 @@ import reactor.core.publisher.Mono
  */
 class MooModule : Module("moo") {
     override fun process(e: Event): Mono<Void> {
-        if (e is MessageCreateEvent)
-            process(e)
+//        if (e is MessageCreateEvent)
+//            process(e)
         return Mono.empty()
     }
 /*
