@@ -1,7 +1,6 @@
 package com.github.dkambersky.butlerbot.modules
 
 import com.github.dkambersky.butlerbot.Module
-import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message
 import discord4j.core.event.domain.Event
 import discord4j.core.event.domain.message.MessageCreateEvent
@@ -25,7 +24,7 @@ const val FINE_LOGGING = true
  * (as well as the correspondence between the player and Pokécord).
  * Not as needed nowadays because the mons are mostly turned off (thank god).
  */
-class JanitorModule(guild: Guild? = null) : Module("janitor", guild) {
+class JanitorModule() : Module("janitor") {
     override fun process(e: Event): Mono<Void> {
         if (e is MessageCreateEvent)
             process(e)

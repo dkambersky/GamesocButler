@@ -1,7 +1,6 @@
 package com.github.dkambersky.butlerbot.modules
 
 import com.github.dkambersky.butlerbot.Module
-import discord4j.core.`object`.entity.Guild
 import discord4j.core.event.domain.Event
 import reactor.core.publisher.Mono
 
@@ -17,7 +16,7 @@ import reactor.core.publisher.Mono
  * . fortune - probably not coming, not without a *nix system :(
  *     - currently using a public API ¯\_(ツ)_/¯ well, gluing a fortune and cowsay API together
  */
-class MooModule(guild: Guild? = null) : Module("moo", guild) {
+class MooModule() : Module("moo") {
     override fun process(e: Event): Mono<Void> {
 //        if (e is MessageCreateEvent)
 //            process(e)

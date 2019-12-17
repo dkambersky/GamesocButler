@@ -96,8 +96,7 @@ fun createModulesForGuild(guild: Guild): List<Module> {
                  *  Both of which are pretty ugly. Thank Java's reflection and Kotlin's 'static' weirdness.
                  *  The modules are pretty much free to instantiate so ¯\_(ツ)_/¯
                  */
-                println("TRYING TO START ${it.canonicalName}")
-                val instance = it.constructors.first().newInstance(guild) as Module
+                val instance = it.constructors.first().newInstance() as Module
                 val name = it.superclass.getMethod("name")
                         .invoke(instance) as String
                 name to instance

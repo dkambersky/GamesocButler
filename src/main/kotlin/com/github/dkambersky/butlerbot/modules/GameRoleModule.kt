@@ -5,7 +5,6 @@ import com.github.dkambersky.butlerbot.Module
 import com.github.dkambersky.butlerbot.db
 import com.github.dkambersky.butlerbot.setConfBranch
 import com.github.dkambersky.butlerbot.util.*
-import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.GuildMessageChannel
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Message
@@ -32,7 +31,7 @@ import java.util.*
  */
 
 
-class GameRoleModule(guild: Guild?=null) : Module("game-role", guild) {
+class GameRoleModule() : Module("game-role") {
     override fun process(e: Event): Mono<Void> {
         when (e) {
             is MessageCreateEvent -> process(e)
