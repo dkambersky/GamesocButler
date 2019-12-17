@@ -1,6 +1,6 @@
-package com.github.dkambersky.cleanerbot.modules
+package com.github.dkambersky.butlerbot.modules
 
-import com.github.dkambersky.cleanerbot.Module
+import com.github.dkambersky.butlerbot.Module
 import discord4j.core.event.domain.Event
 import discord4j.core.event.domain.message.MessageCreateEvent
 import reactor.core.publisher.Mono

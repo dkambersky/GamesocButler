@@ -1,4 +1,4 @@
-package com.github.dkambersky.cleanerbot.util
+package com.github.dkambersky.butlerbot.util
 
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Member
