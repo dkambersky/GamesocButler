@@ -1,6 +1,7 @@
 package com.github.dkambersky.butlerbot.modules
 
 import com.github.dkambersky.butlerbot.Module
+import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.Message
 import discord4j.core.event.domain.Event
 import discord4j.core.event.domain.message.MessageCreateEvent
@@ -19,8 +20,12 @@ const val DELETE_TIMER = 5000L
 /* Whether to log every little thing */
 const val FINE_LOGGING = true
 
-
-class JanitorModule : Module("janitor") {
+/**
+ * This module deletes Pokécord's image spam after the mon has been caught
+ * (as well as the correspondence between the player and Pokécord).
+ * Not as needed nowadays because the mons are mostly turned off (thank god).
+ */
+class JanitorModule(guild: Guild? = null) : Module("janitor", guild) {
     override fun process(e: Event): Mono<Void> {
         if (e is MessageCreateEvent)
             process(e)
@@ -31,7 +36,7 @@ class JanitorModule : Module("janitor") {
     private val dirtyByChannel = mutableMapOf<Long, MutableList<Message>>()
 
     fun process(e: MessageCreateEvent) {
-        println("WHOO")
+
         fine("Processing MessageCreate - janitor")
         val channelID = e.message.channelId.asLong()
         val msg = e.message

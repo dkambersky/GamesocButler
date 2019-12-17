@@ -5,6 +5,7 @@ import com.github.dkambersky.butlerbot.Module
 import com.github.dkambersky.butlerbot.db
 import com.github.dkambersky.butlerbot.setConfBranch
 import com.github.dkambersky.butlerbot.util.*
+import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.GuildMessageChannel
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Message
@@ -31,7 +32,7 @@ import java.util.*
  */
 
 
-class GameRoleModule : Module("game-role") {
+class GameRoleModule(guild: Guild?=null) : Module("game-role", guild) {
     override fun process(e: Event): Mono<Void> {
         when (e) {
             is MessageCreateEvent -> process(e)
@@ -57,14 +58,14 @@ class GameRoleModule : Module("game-role") {
             108979387755401216
     )
 
-    private val greetingEnabled = db("game-role", "greeting-enabled") ?: false
-    private val autoAssignRole = db<Long?>("game-role", "auto-assigned-role-id")
-    private val rolePrefix: String? = db("game-role", "prefix")
-    private val roleSuffix = db<String>("game-role", "suffix")
-    private val enableMentions = db("game-role", "enableMentions") ?: false
-    private val rolesManaged: MutableList<String>? = db<MutableList<String?>>("game-role", "roles-managed")
+    private val greetingEnabled = conf("greeting-enabled") ?: false
+    private val autoAssignRole = conf<Long?>("auto-assigned-role-id")
+    private val rolePrefix: String? = conf("prefix")
+    private val roleSuffix = conf<String>("suffix")
+    private val enableMentions = conf("enableMentions") ?: false
+    private val rolesManaged = conf<MutableList<String?>>("roles-managed")
             ?.toMutableList().mapNotNull { it.toString() }.toMutableList()
-    private val BOT_CHANNEL = db("game-role", "bot-channel") ?: GAMESOC_BOT_CHANNEL
+    private val BOT_CHANNEL = conf("bot-channel") ?: GAMESOC_BOT_CHANNEL
     private val DELETION_ENABLED = false
 
     /* The whole permission logic needs _major_ cleanup lol */
@@ -398,6 +399,3 @@ class GameRoleModule : Module("game-role") {
         println("Game Role module initializing. Data: $rolePrefix, $rolesManaged, $roleSuffix")
     }
 }
-
-
-
