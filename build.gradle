@@ -78,10 +78,6 @@ dependencies {
     compile "com.uchuhimo:konf-yaml:${konfVersion}"
     compile "com.uchuhimo:konf-toml:${konfVersion}"
 
-
-
-
-
     /* Logging - Log4J2 */
     implementation "org.apache.logging.log4j:log4j-api:$log4jVersion"
     implementation "org.apache.logging.log4j:log4j-core:$log4jVersion"
