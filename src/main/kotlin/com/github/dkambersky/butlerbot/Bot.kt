@@ -1,7 +1,6 @@
 package com.github.dkambersky.butlerbot
 
 import com.github.dkambersky.butlerbot.modules.ModuleUtils
-import com.uchuhimo.konf.toValue
 import discord4j.core.DiscordClient
 import discord4j.core.DiscordClientBuilder
 import discord4j.core.`object`.entity.Guild
@@ -37,9 +36,6 @@ val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecu
 val activeModules = mutableListOf<Module>()
 fun main() {
     val token = config<String>("apiToken")
-
-    println(config.at("tree.1.myVal").toValue<Boolean>())
-    print("INITIATING GRR ${config.at("game-role.484444731619803154.greeting-enabled").toValue<Boolean>()}")
 
     client = DiscordClientBuilder(token)
             .setRouterOptions(
