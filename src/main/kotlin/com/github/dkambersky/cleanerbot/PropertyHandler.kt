@@ -72,7 +72,7 @@ private fun setDefaults() {
     conf_node.put("api-token", "")
     conf_node.put("source-file", "sources.txt")
 
-    root.set("config", conf_node)
+    root.set("config", conf_node) as ObjectNode
 
     config_tree = root
 
