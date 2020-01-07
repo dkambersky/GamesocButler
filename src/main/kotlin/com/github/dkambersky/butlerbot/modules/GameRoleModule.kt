@@ -3,8 +3,7 @@ package com.github.dkambersky.butlerbot.modules
 import com.github.dkambersky.butlerbot.Module
 import com.github.dkambersky.butlerbot.config
 import com.github.dkambersky.butlerbot.util.*
-import com.uchuhimo.konf.ConfigSpec
-import com.uchuhimo.konf.toValue
+
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.GuildMessageChannel
 import discord4j.core.`object`.entity.Member
@@ -399,10 +398,7 @@ class GameRoleModule(guild: Guild) : Module("game-role", guild) {
     init {
         /*rolePrefix = get("rolePrefix")*/
         println("Game Role module initializing. Data: $rolePrefix, $rolesManaged, $roleSuffix")
-                db()[Companion.rolesManaged]
-    }
-    companion object : ConfigSpec("game-role"){
-            val rolesManaged by optional(listOf<String>())
+
     }
 
 }

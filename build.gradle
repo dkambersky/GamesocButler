@@ -5,7 +5,6 @@ buildscript {
         discord4jVersion = "3.0.+"
         khttpVersion = "1.0.0"
         log4jVersion = "2.11.1"
-        konfVersion = "0.22.1"
     }
 
     repositories {
@@ -16,6 +15,7 @@ buildscript {
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}"
         classpath "org.jetbrains.kotlin:kotlin-allopen:${kotlinVersion}"
+        classpath "org.jetbrains.kotlin:kotlin-serialization:${kotlinVersion}"
         classpath "khttp:khttp:${khttpVersion}"
     }
 }
@@ -25,6 +25,7 @@ group = 'dkambersky'
 version = '1.0-SNAPSHOT'
 
 apply plugin: 'kotlin'
+apply plugin: 'kotlinx-serialization'
 
 repositories {
     mavenCentral()
@@ -73,10 +74,9 @@ dependencies {
     /* Exposed - ORM*/
     compile 'org.jetbrains.exposed:exposed:0.16.3'
 
-    /* Konf */
-    compile "com.uchuhimo:konf-core:${konfVersion}"
-    compile "com.uchuhimo:konf-yaml:${konfVersion}"
-    compile "com.uchuhimo:konf-toml:${konfVersion}"
+    /* Serialization */
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-runtime:0.14.0" // JVM dependency
+    implementation "com.charleskorn.kaml:kaml:0.15.0"
 
     /* Logging - Log4J2 */
     implementation "org.apache.logging.log4j:log4j-api:$log4jVersion"
