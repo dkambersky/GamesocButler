@@ -1,5 +1,7 @@
 package com.github.dkambersky.butlerbot
 
+import com.github.dkambersky.butlerbot.modules.ModuleUtils
+import com.uchuhimo.konf.toValue
 import discord4j.core.DiscordClient
 import discord4j.core.DiscordClientBuilder
 import discord4j.core.`object`.entity.Guild
@@ -11,7 +13,6 @@ import discord4j.core.event.domain.lifecycle.ReadyEvent
 import discord4j.rest.request.RouteMatcher
 import discord4j.rest.request.RouterOptions
 import discord4j.rest.response.ResponseFunction
-import org.reflections.Reflections
 import reactor.core.publisher.Mono
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
@@ -36,6 +37,9 @@ val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecu
 val activeModules = mutableListOf<Module>()
 fun main() {
     val token = config<String>("apiToken")
+
+    println(config.at("tree.1.myVal").toValue<Boolean>())
+    print("INITIATING GRR ${config.at("game-role.484444731619803154.greeting-enabled").toValue<Boolean>()}")
 
     client = DiscordClientBuilder(token)
             .setRouterOptions(
@@ -83,34 +87,11 @@ fun main() {
 
 fun createModulesForGuild(guild: Guild): List<Module> {
     val enabledModules = config<MutableSet<String>>("enabled-modules")
-    return Reflections("com.github.dkambersky.butlerbot")
-            /* Find all modules */
-            .getSubTypesOf(Module::class.java)
+    println("Enabled modules: $enabledModules")
 
-            /* Map them to their declared name */
-            .map {
-                /* This is potentially wasteful as it briefly creates an instance of even the unused modules
-                 * However, the other ways to deal with this are either
-                 *  - adding annotations to the mix
-                 *  - adding companion objects everywhere
-                 *  Both of which are pretty ugly. Thank Java's reflection and Kotlin's 'static' weirdness.
-                 *  The modules are pretty much free to instantiate so ¯\_(ツ)_/¯
-                 */
-                val instance = it.constructors.first().newInstance() as Module
-                val name = it.superclass.getMethod("name")
-                        .invoke(instance) as String
-                name to instance
-            }
-
-            /* Filter by the ones enabled in config */
-            .filter { enabledModules.contains(it.first) }
-
-            /* Finally, register them */
-            .map {
-                println("Loading module ${it.first} for guild ${guild.id.asLong()}")
-                activeModules.add(it.second)
-                it.second
-            }
+    return enabledModules.mapNotNull {
+        ModuleUtils.asModule(it)?.constructors?.first()?.call(guild) as Module?
+    }.apply { forEach { activeModules.add(it) } }
 }
 
 
