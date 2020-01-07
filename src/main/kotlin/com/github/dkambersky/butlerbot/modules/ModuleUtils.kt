@@ -8,7 +8,7 @@ class ModuleUtils {
         fun asModule(name: String): KClass<*>? {
             return when (name) {
                 "game-role" -> GameRoleModule::class
-                "moo" -> MooModule::class
+//                "moo" -> MooModule::class
                 "janitor" -> JanitorModule::class
                 "pong" -> PongModule::class
                 else -> null

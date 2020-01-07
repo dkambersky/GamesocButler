@@ -1,11 +1,9 @@
 package com.github.dkambersky.butlerbot.modules
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.github.dkambersky.butlerbot.Module
 import com.github.dkambersky.butlerbot.config
-import com.github.dkambersky.butlerbot.db
-import com.github.dkambersky.butlerbot.setConfBranch
 import com.github.dkambersky.butlerbot.util.*
+import com.uchuhimo.konf.ConfigSpec
 import com.uchuhimo.konf.toValue
 import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.GuildMessageChannel
@@ -19,7 +17,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import reactor.core.publisher.Mono
+import java.awt.Color
 import java.util.*
+
 
 /**
  * Game Role module
@@ -66,8 +66,7 @@ class GameRoleModule(guild: Guild) : Module("game-role", guild) {
     private val rolePrefix: String? = conf("prefix")
     private val roleSuffix = conf<String>("suffix")
     private val enableMentions = conf("enableMentions") ?: false
-    private val rolesManaged = conf<MutableList<String?>>("roles-managed")
-            ?.toMutableList().mapNotNull { it.toString() }.toMutableList()
+    private val rolesManaged = db<MutableList<String>>("roles-managed") ?: mutableListOf()
     private val BOT_CHANNEL = conf("bot-channel") ?: GAMESOC_BOT_CHANNEL
     private val DELETION_ENABLED = false
 
@@ -157,7 +156,7 @@ class GameRoleModule(guild: Guild) : Module("game-role", guild) {
             argsFull
 
 
-        println("Wroking with role [$roleName]")
+        println("Wroking with role [$roleName] role ")
         if (roleName == "CCC")
             roleName = "Chill Chat Clan"
 
@@ -168,14 +167,16 @@ class GameRoleModule(guild: Guild) : Module("game-role", guild) {
                 command != "addgame" &&
                 command != "removegame"
         ) {
-            if (knownCommands.none { it == command }) {
+            if (!canManageRole(roleName)) {
                 e.messageBack("That isn't a game role.")
+                println("MANAGED ROLES: $rolesManaged")
             }
             println("Returning boi")
             return
         }
-
-        val role = e.guild.block()!!.roles.filter { it.name == roleName }.blockFirst()
+        println("AALKSJD")
+        val role = guild.roles.filter { it.name == roleName }.blockFirst()
+        println("AAA")
         /*
 
 
@@ -208,6 +209,8 @@ class GameRoleModule(guild: Guild) : Module("game-role", guild) {
         fine("Can manage nicknames? $canNick; Is higher? $isHigher; Can manage role? $canRole; Is higher in roles? $canRole2 ")
 */
 
+        println("Down here ")
+
         /* TODO role hierarchy stuff */
         if (false) {
             e.messageBack("I'm not allowed to manage that role.")
@@ -222,6 +225,7 @@ class GameRoleModule(guild: Guild) : Module("game-role", guild) {
                 )
             }
             "join" -> {
+                println("JOIN RUNNING")
                 if (role.name == "Chill Chat Clan") {
                     if (e.member.get().roles.any { it.id == role.id }.block() == true) {
                         e.messageBack("You're already chill!")
@@ -297,7 +301,7 @@ class GameRoleModule(guild: Guild) : Module("game-role", guild) {
 
             }
             "addgame" -> {
-                if (author.canAdmin()) {
+                if (!author.canAdmin()) {
                     e.messageBack("No can do boss.")
                     return
                 }
@@ -307,19 +311,17 @@ class GameRoleModule(guild: Guild) : Module("game-role", guild) {
                     return
                 }
 
-//
-//                Role(e.guildId,)
-//                        .setMentionable(true)
-//                        .setHoist(false)
-//                        .withColor(Color.ORANGE)
-//                        .withName(roleName)
-//                        .build()
-//                        .apply { e.guild.roles.add(this) }
 
-
-                e.messageBack("Game added!")
-                rolesManaged?.add(roleName)
-                saveRoles()
+                guild.createRole {
+                    it.setMentionable(true)
+                    it.setHoist(false)
+                    it.setColor(Color.ORANGE)
+                    it.setName(roleName)
+                }.doOnSuccess {
+                    e.messageBack("Game added!")
+                    rolesManaged.add(roleName)
+                    saveRoles()
+                }.block()
             }
             "removegame" -> {
                 if (author.canAdmin()) {
@@ -371,11 +373,8 @@ class GameRoleModule(guild: Guild) : Module("game-role", guild) {
     }
 
     private fun saveRoles() {
-        val node = JsonNodeFactory.instance.arrayNode().apply {
-            rolesManaged?.forEach { add(it) }
-        }
-        println("Saving roles w/ node $node")
-        setConfBranch(node, "game-role", "roles-managed")
+        println("WAT")
+        dbSave(rolesManaged, "roles-managed")
     }
 
     private fun enqueueForDeletion(msg: Message) {
@@ -388,7 +387,7 @@ class GameRoleModule(guild: Guild) : Module("game-role", guild) {
         }
     }
 
-    private fun canManageRole(roleName: String): Boolean = rolesManaged?.contains(roleName) ?: false
+    private fun canManageRole(roleName: String): Boolean = rolesManaged.contains(roleName)
 
 
     override fun defaults() = mapOf(
@@ -400,5 +399,11 @@ class GameRoleModule(guild: Guild) : Module("game-role", guild) {
     init {
         /*rolePrefix = get("rolePrefix")*/
         println("Game Role module initializing. Data: $rolePrefix, $rolesManaged, $roleSuffix")
+                db()[Companion.rolesManaged]
     }
+    companion object : ConfigSpec("game-role"){
+            val rolesManaged by optional(listOf<String>())
+    }
+
 }
+

@@ -17,7 +17,6 @@ object ConfAA : ConfigSpec("config") {
 val db = Config().from.yaml.watchFile("database.yml")
 val config = Config().from.yaml.watchFile("config.yml")
 
-inline fun <reified A> db(vararg keys: String) = db.at(keys.joinToString(".")).toValue<A>()
 inline fun <reified A> config(vararg keys: String) = config.at("config").at(keys.joinToString(".")).toValue<A>()
 
 fun setConfBranch(value: Any, vararg keys: String) = config.set(keys[0], value)
