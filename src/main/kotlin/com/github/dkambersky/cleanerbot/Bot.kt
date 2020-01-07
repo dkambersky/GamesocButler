@@ -1,17 +1,25 @@
 package com.github.dkambersky.cleanerbot
 
+import discord4j.core.DiscordClient
+import discord4j.core.DiscordClientBuilder
+import discord4j.core.`object`.entity.Message
+import discord4j.core.`object`.entity.MessageChannel
+import discord4j.core.event.domain.Event
+import discord4j.core.event.domain.guild.GuildCreateEvent
+import discord4j.core.event.domain.lifecycle.ReadyEvent
+import discord4j.rest.request.RouteMatcher
+import discord4j.rest.request.RouterOptions
+import discord4j.rest.response.ResponseFunction
 import org.reflections.Reflections
-import sx.blah.discord.api.ClientBuilder
-import sx.blah.discord.api.IDiscordClient
-import sx.blah.discord.handle.obj.IChannel
-import sx.blah.discord.handle.obj.IMessage
+import reactor.core.publisher.Mono
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
+import java.util.logging.Logger
 
 /* --- Globals --- */
 /* Discord client for interfacing with the API */
-lateinit var client: IDiscordClient
+lateinit var client: DiscordClient
 
 /* Whether Discord API is ready */
 var ready = false
@@ -19,15 +27,26 @@ var ready = false
 /* Executor for timed tasks */
 val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 
+
 /* Bot for GameSoc; cleans up after Pokecord and manages game-related groups and happenings
  * TODO rework the unholy abomination that is the config code
  */
+
+val activeModules = mutableListOf<Module>()
 fun main(args: Array<String>) {
-    login()
+    //    if (!::client.isInitialized)
+//        return
 
+    val token = get("api-token")
+            ?: throw Exception("Please specify an API token in config.yml!")
 
-    if (!::client.isInitialized)
-        return
+    client = DiscordClientBuilder(token)
+            .setRouterOptions(
+                    RouterOptions.builder()
+                            .onClientResponse(ResponseFunction.emptyOnErrorStatus(RouteMatcher.any()))
+                            .build()
+            )
+            .build()
 
     /* Oh Jackson */
     val enabledModules: Set<String> =
@@ -53,7 +72,7 @@ fun main(args: Array<String>) {
                  *  Both of which are pretty ugly. Thank Java's reflection and Kotlin's 'static' weirdness.
                  *  The modules are pretty much free to instantiate so ¯\_(ツ)_/¯
                  */
-                val instance = it.constructors.first().newInstance()
+                val instance = it.constructors.first().newInstance() as Module
                 val name = it.superclass.getMethod("name")
                         .invoke(instance) as String
                 name to instance
@@ -63,28 +82,54 @@ fun main(args: Array<String>) {
             .filter { enabledModules.contains(it.first) }
 
             /* Finally, register them */
-            .forEach { client.dispatcher.registerListener(it.second) }
+            .forEach {
+                println("Loading module ${it.first}")
+                activeModules.add(it.second)
+            }
+
+    client.eventDispatcher
+            .on(ReadyEvent::class.java)
+            .map { it.guilds.size }
+            .flatMap {
+                client.eventDispatcher.on(GuildCreateEvent::class.java)
+                        .take(it.toLong()).last()
+            }
+            .subscribe {
+                ready = true
+            }
+
+
+    client.eventDispatcher
+            .on(Event::class.java)
+            .onErrorResume { e -> Mono.empty() }
+            .subscribe { event ->
+                Logger.getGlobal().info("PROCESSING EVENT $event")
+                activeModules.forEach {
+                    try {
+                        it.process(event)
+                                .onErrorResume { e -> Mono.empty() }
+                                .block()
+                    } catch (e: Exception) {
+                        /* Poor man's error handling */
+                        Logger.global.warning("Error: $e")
+                    }
+                }
+
+            }
+
+
+    /* Login & Start receiving events */
+    Logger.getAnonymousLogger().info("Loaded")
+    client.login().onErrorResume { Mono.empty() }.block()
 }
 
-fun login() {
-    val token = get("api-token")
-            ?: throw Exception("Please specify an API token in config.yml!")
-
-    ClientBuilder().apply {
-        setMaxReconnectAttempts(1000)
-        withToken(token)
-        client = login()
-    }
+fun sendMsg(channel: MessageChannel, message: String): Message? {
+    return if (message != "") channel.createMessage(message).block() else null
 }
 
-fun sendMsg(channel: IChannel, message: String): IMessage? {
-    return if (message != "") channel.sendMessage(message) else null
-}
-
-fun sendMsg(channel: IChannel, message: String, timeout: Long): IMessage? {
+fun sendMsg(channel: MessageChannel, message: String, timeout: Long): Message? {
     val msg = sendMsg(channel, message)
     executor.schedule({ msg?.delete() }, timeout, TimeUnit.MILLISECONDS)
-
     return msg
 
 }
