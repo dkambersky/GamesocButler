@@ -2,9 +2,12 @@ package com.github.dkambersky.butlerbot.modules
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.github.dkambersky.butlerbot.Module
+import com.github.dkambersky.butlerbot.config
 import com.github.dkambersky.butlerbot.db
 import com.github.dkambersky.butlerbot.setConfBranch
 import com.github.dkambersky.butlerbot.util.*
+import com.uchuhimo.konf.toValue
+import discord4j.core.`object`.entity.Guild
 import discord4j.core.`object`.entity.GuildMessageChannel
 import discord4j.core.`object`.entity.Member
 import discord4j.core.`object`.entity.Message
@@ -31,7 +34,7 @@ import java.util.*
  */
 
 
-class GameRoleModule() : Module("game-role") {
+class GameRoleModule(guild: Guild) : Module("game-role", guild) {
     override fun process(e: Event): Mono<Void> {
         when (e) {
             is MessageCreateEvent -> process(e)
@@ -57,6 +60,7 @@ class GameRoleModule() : Module("game-role") {
             108979387755401216
     )
 
+    private val bc = print("INITIATING GR ${config.at("game-role.484444731619803154.greeting-enabled").toValue<Boolean>()}")
     private val greetingEnabled = conf("greeting-enabled") ?: false
     private val autoAssignRole = conf<Long?>("auto-assigned-role-id")
     private val rolePrefix: String? = conf("prefix")
