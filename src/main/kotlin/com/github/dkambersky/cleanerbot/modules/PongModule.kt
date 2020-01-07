@@ -14,7 +14,11 @@ class PongModule : Module("pong") {
             return Mono.empty()
 
         if (e.message.content.orElse("") == "!ping")
-             e.messageBack("Pong!")
+            e.messageBack("Pong!")
+
+        if (e.message.content.orElse("") == "!about")
+            e.messageBack("I'm Walter C. Dornez, a butler of the Hellsing family.\n" +
+                    "<https://github.com/dkambersky/gamesocbutler>")
 
         return Mono.empty()
     }

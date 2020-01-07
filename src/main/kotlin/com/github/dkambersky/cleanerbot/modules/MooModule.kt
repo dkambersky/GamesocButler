@@ -37,7 +37,8 @@ class MooModule : Module("moo") {
         return Mono.empty()
     }
 
-    private val mooPattern = Regex("m+oo+")
+    /* It's more fun broken */
+    private val mooPattern = Regex("m*o*")
 
     fun process(e: MessageCreateEvent) {
 
@@ -75,7 +76,7 @@ class MooModule : Module("moo") {
                 if (e.message.authorAsMember.block()?.id == e.client.selfId.get())
                     return
 
-                    println("MOO MATCHES $contents")
+                println("MOO MATCHES $contents")
                 channel.sendMessage(mooBack(contents))
             }
         }

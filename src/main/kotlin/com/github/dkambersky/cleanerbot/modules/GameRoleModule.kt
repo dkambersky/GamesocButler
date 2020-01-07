@@ -16,6 +16,8 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import reactor.core.publisher.Mono
+import java.awt.Color
+import java.time.Duration
 import java.util.*
 
 /**
@@ -63,7 +65,9 @@ class GameRoleModule : Module("game-role") {
     private val rolePrefix: String? = getConfBranch("game-role", "prefix")?.textValue()
     private val roleSuffix = getConfBranch("game-role", "suffix")?.textValue()
     private val enableMentions = getConfBranch("game-role", "enableMentions")?.textValue()?.toBoolean() ?: false
-    private val rolesManaged: MutableList<String>? = getConfBranch("game-role", "roles-managed")?.map { it.textValue() }?.toMutableList()
+    private val rolesManaged: MutableList<String>? = getConfBranch("game-role", "roles-managed")?.map { it.textValue() }?.toMutableList().apply {
+        println("loaded ROLES $this")
+    }
     private val BOT_CHANNEL = getConfBranch("game-role", "bot-channel")?.textValue()?.toLongOrNull()
             ?: GAMESOC_BOT_CHANNEL
     private val DELETION_ENABLED = false
@@ -117,13 +121,13 @@ class GameRoleModule : Module("game-role") {
             it.name.startsWith("general")
         }.blockFirst() as GuildMessageChannel
 
-        if (autoAssignRole != null)
-            user.addRole(Snowflake.of(autoAssignRole)).block()
-
         welcomeChannel.sendMessage(
                 "Welcome, ${user.mention}!\n" +
                         "If you'd like to play games with us, go to ${botChannel?.mention} and register yourself for games you're interested in.\n" +
                         "You can see available commands with `-help` (but please keep it out of ${welcomeChannel.mention}).")
+
+        if (autoAssignRole != null)
+            user.addRole(Snowflake.of(autoAssignRole)).block()
     }
 
     private fun process(e: MessageCreateEvent) {
@@ -172,7 +176,7 @@ class GameRoleModule : Module("game-role") {
             return
         }
 
-        val role = e.guild.block()!!.roles.filter { it.name == roleName }.blockFirst() ?: return
+        val role = e.guild.block()!!.roles.filter { it.name == roleName }.blockFirst(Duration.ofSeconds(1))
         /*
 
 
@@ -205,7 +209,7 @@ class GameRoleModule : Module("game-role") {
         fine("Can manage nicknames? $canNick; Is higher? $isHigher; Can manage role? $canRole; Is higher in roles? $canRole2 ")
 */
 
-        if (!false) {
+        if (false) {
             e.messageBack("I'm not allowed to manage that role.")
             return
         }
@@ -218,7 +222,8 @@ class GameRoleModule : Module("game-role") {
                 )
             }
             "join" -> {
-                if (role.name == "Chill Chat Clan") {
+                println("join runnin")
+                if (false && role.name == "Chill Chat Clan") {
                     if (e.member.get().roles.any { it.id == role.id }.block() == true) {
                         e.messageBack("You're already chill!")
                         return
@@ -237,7 +242,8 @@ class GameRoleModule : Module("game-role") {
                         e.printStackTrace()
                     }
                     e.messageBack("Welcome to the ruling class. ${if (failed) "Change the nick yourself, I'm not allowed to." else ""}")
-                    author.addRole(role)
+                    if (role != null)
+                        author.addRole(role)
 
                     enqueueForDeletion(e.message)
                     return
@@ -248,6 +254,7 @@ class GameRoleModule : Module("game-role") {
                     return
                 }
                 if (role != null) {
+                    println("AAAAAAAA")
                     if (!author.hasRole(role)) {
                         author.addRole(role)
                         e.messageBack("You've been enlisted!")
@@ -293,7 +300,7 @@ class GameRoleModule : Module("game-role") {
 
             }
             "addgame" -> {
-                if (author.canAdmin()) {
+                if (!author.canAdmin()) {
                     e.messageBack("No can do boss.")
                     return
                 }
@@ -303,19 +310,16 @@ class GameRoleModule : Module("game-role") {
                     return
                 }
 
-//
-//                Role(e.guildId,)
-//                        .setMentionable(true)
-//                        .setHoist(false)
-//                        .withColor(Color.ORANGE)
-//                        .withName(roleName)
-//                        .build()
-//                        .apply { e.guild.roles.add(this) }
-
-
-                e.messageBack("Game added!")
-                rolesManaged?.add(roleName)
-                saveRoles()
+                e.guild.block()?.createRole {
+                    it.setMentionable(true)
+                    it.setHoist(false)
+                    it.setColor(Color.ORANGE)
+                    it.setName(roleName)
+                }?.doOnSuccess {
+                    e.messageBack("Game added!")
+                    rolesManaged?.add(roleName)
+                    saveRoles()
+                }?.block()
             }
             "removegame" -> {
                 if (author.canAdmin()) {

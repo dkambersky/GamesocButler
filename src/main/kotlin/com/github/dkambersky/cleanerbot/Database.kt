@@ -34,12 +34,12 @@ fun setConfBranch(value: JsonNode, vararg keys: String) {
     for (key in keys.take(keys.size - 1)) {
         node = try {
             node.with(key)
-        } catch (e:Exception){
+        } catch (e: Exception) {
             node.withArray(key)
         }
     }
 
-    (node as ObjectNode).set(keys.last(), value)
+    (node as ObjectNode).set(keys.last(), value) as ObjectNode
     save()
 
 }
@@ -79,10 +79,10 @@ private fun setDefaults() {
     val root: ObjectNode = mapper.createObjectNode()
 
     val harambeNode = mapper.createObjectNode()
-    harambeNode.set("streak", TextNode("0"))
-    harambeNode.set("last", TextNode("${System.currentTimeMillis()}"))
+    harambeNode.set("streak", TextNode("0")) as ObjectNode
+    harambeNode.set("last", TextNode("${System.currentTimeMillis()}")) as ObjectNode
 
-    root.set("harambe", harambeNode)
+    root.set("harambe", harambeNode) as ObjectNode
 
     db_tree = root
 
