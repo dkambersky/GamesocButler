@@ -126,8 +126,15 @@ class GameRoleModule : Module("game-role") {
                         "If you'd like to play games with us, go to ${botChannel?.mention} and register yourself for games you're interested in.\n" +
                         "You can see available commands with `-help` (but please keep it out of ${welcomeChannel.mention}).")
 
+        println("Processing user join, auto assign role: $autoAssignRole")
         if (autoAssignRole != null)
-            user.addRole(Snowflake.of(autoAssignRole)).block()
+            user.addRole(Snowflake.of(autoAssignRole)).doOnError {
+                System.err.println("Couldn't assign role! Trace incoming")
+                it.printStackTrace()
+            }.doOnSuccess {
+                println("Role assign succeeded!")
+            }.block()
+
     }
 
     private fun process(e: MessageCreateEvent) {
