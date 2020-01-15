@@ -121,10 +121,15 @@ class GameRoleModule : Module("game-role") {
             it.name.startsWith("general")
         }.blockFirst() as GuildMessageChannel
 
+        val infoChannel = guild.channels.filter {
+            it.name.startsWith("info-and-rules")
+        }.blockFirst() as GuildMessageChannel
+
         welcomeChannel.sendMessage(
                 "Welcome, ${user.mention}!\n" +
                         "If you'd like to play games with us, go to ${botChannel?.mention} and register yourself for games you're interested in.\n" +
-                        "You can see available commands with `-help` (but please keep it out of ${welcomeChannel.mention}).")
+                        "You can see available commands with `-help` (but please keep it out of ${welcomeChannel.mention}).\n" +
+                        "Before you start posting, please look in the ${infoChannel.mention} channel to read our rules and what we're about.")
 
         println("Processing user join, auto assign role: $autoAssignRole")
         if (autoAssignRole != null)
